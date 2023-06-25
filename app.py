@@ -13,14 +13,14 @@ from modules.camera.camera import Camera
 from modules.security.security import Security
 
 class App(Camera):
-    def __init__(self, client: ApiClient, hardware: dict, camera: int = 0):
+    def __init__(self, client: ApiClient, hardware: dict, camera: int = 0, image_preprocessing_params: dict = None, edge_preprocessing_params: dict = None):
         self.client = client
         self.pinOut = PinOut(**hardware)
         self.security = Security()
 
         # Set RGB led to Green
         self.pinOut.write_rgb(False, True, False)
-        super().__init__(camera)
+        super().__init__(camera, image_preprocessing_params, edge_preprocessing_params)
         self.app = Flask(__name__, template_folder='./templates')
         self.routes()
            
@@ -102,7 +102,7 @@ async def main():
 
         print("Starting...")
         # Send status to server
-        app = App(client, config['hardware'], config['camera'])
+        app = App(client, config['hardware'], config['camera'], config['preprocessing']['image'], config['preprocessing']['edge'])
         await client.patch({'status': True})        
 
         app.run(debug=True)

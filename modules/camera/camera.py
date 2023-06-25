@@ -10,7 +10,7 @@ from .preprocessing.edge_preprocessing import EdgePreprocessor
 from .preprocessing.image_preprocessing import ImagePreprocessor
 
 class Camera(Detect):
-    def __init__(self, camera: int = 0):
+    def __init__(self, camera: int = 0, image_preprocessing_params: dict = None, edge_preprocessing_params: dict = None):
         self.capture = 0
         self.grey = 0
         self.neg = 0
@@ -21,8 +21,8 @@ class Camera(Detect):
         self.out = None
         self.camera = None
         self.start_time = 0
-        self.imagePreprocessor = ImagePreprocessor()
-        self.edgePreprocessor = EdgePreprocessor()        
+        self.imagePreprocessor = ImagePreprocessor(image_preprocessing_params)
+        self.edgePreprocessor = EdgePreprocessor(edge_preprocessing_params)
         self.setup(camera)
     
     def setup(self, camera: int):
@@ -48,19 +48,19 @@ class Camera(Detect):
             try:
                 frame = self.imagePreprocessor.pipeline(frame,
                     self.imagePreprocessor.resize_image,
-                    self.imagePreprocessor.flip_image,
+                    # self.imagePreprocessor.flip_image,
                     self.imagePreprocessor.change_contrast_and_brightness,
                 )
                 
-                # frame = self.edgePreprocessor.pipeline(frame,
-                #     self.edgePreprocessor.convert_to_grayscale,
-                #     self.edgePreprocessor.apply_clahe,
-                #     # self.preprocessor.perform_histogram_equalization,
-                #     self.edgePreprocessor.detect_edges,
-                #     self.edgePreprocessor.detect_lines,
-                #     self.edgePreprocessor.dilate_image,
-                #     self.edgePreprocessor.invert_image,
-                # )
+                frame = self.edgePreprocessor.pipeline(frame,
+                    self.edgePreprocessor.convert_to_grayscale,
+                    self.edgePreprocessor.apply_clahe,
+                    # self.preprocessor.perform_histogram_equalization,
+                    self.edgePreprocessor.detect_edges,
+                    self.edgePreprocessor.detect_lines,
+                    self.edgePreprocessor.dilate_image,
+                    self.edgePreprocessor.invert_image,
+                )
             except cv2.error:
                 print("Camera is not available")
             

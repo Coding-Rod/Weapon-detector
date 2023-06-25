@@ -5,8 +5,8 @@ from .parameters import Parameters
 
 class EdgePreprocessor(Parameters):
 
-    def resize_image(self, image):
-        return cv2.resize(image, (self.desired_width, self.desired_height))
+    def __init__(self, params: dict = None):
+        super().__init__(edge_params=params)
 
     def convert_to_grayscale(self, image):
         return cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -62,7 +62,7 @@ class EdgePreprocessor(Parameters):
         return cv2.dilate(image, np.ones((2, 2), np.uint8), iterations=1)
     
     def pipeline(self, img, *args):
-        self.edges = img
+        self.edges = img.copy()
 
         for preprocessing_method in args:
             self.edges = preprocessing_method(self.edges)
@@ -87,7 +87,7 @@ class EdgePreprocessor(Parameters):
         edges = self.get_edges()
         # print(edges)
         # Use edges as mask to multiply the original image
-        return cv2.bitwise_and(self.resize_image(image), cv2.cvtColor(edges, cv2.COLOR_GRAY2RGB))
+        return cv2.bitwise_and(image, cv2.cvtColor(edges, cv2.COLOR_GRAY2RGB))
 
     def change_edges_color(self):
         """ Changes the color of the edges

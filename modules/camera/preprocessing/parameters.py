@@ -1,20 +1,23 @@
 import cv2
 import numpy as np
-from dotenv import load_dotenv
 import os
+import yaml
 
 class Parameters:
-    load_dotenv()
-    desired_width = int(os.getenv("DESIRED_WIDTH"))
-    desired_height = int(os.getenv("DESIRED_HEIGHT"))
-    clip_limit = float(os.getenv("CLIP_LIMIT"))
-    tile_grid_size = tuple(map(int, os.getenv("TILE_GRID_SIZE").split(",")))
-    canny_threshold1, canny_threshold2 = tuple(map(int, os.getenv("CANNY_THRESHOLD").split(",")))
-    color = tuple(map(int, os.getenv("COLOR").split(",")))
-    lines_threshold, lines_min_line_length, lines_max_line_gap = tuple(map(int, os.getenv("LINES").split(",")))
-    alpha = float(os.getenv("ALPHA"))
-    beta = float(os.getenv("BETA"))
     
+    def __init__(self,image_params: dict = None, edge_params: dict = None):
+        if image_params:
+            self.desired_width = image_params["width"] or 800
+            self.desired_height = image_params["height"] or 600
+            self.alpha = image_params["alpha"] or 1.0
+            self.beta = image_params["beta"] or 0
+        if edge_params:
+            self.clip_limit = edge_params["clip_limit"] or 2.0
+            self.tile_grid_size = (edge_params["tile_grid_size"][0] or 8, edge_params["tile_grid_size"][1] or 8)
+            self.canny_threshold1, self.canny_threshold2 = edge_params["canny_threshold"][0] or 100, edge_params["canny_threshold"][1] or 200
+            self.color = (edge_params["color"][0] or 0, edge_params["color"][1] or 0, edge_params["color"][2] or 0)
+            self.lines_threshold, self.lines_min_line_length, self.lines_max_line_gap = edge_params["lines_threshold"] or 100, edge_params["lines_min_line_length"] or 100, edge_params["lines_max_line_gap"] or 10
+        
     def set_desired_width(self, value):
         self.desired_width = value # Min: 0, Max: 1000
         

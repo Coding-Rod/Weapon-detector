@@ -1,5 +1,7 @@
 import cv2
 import numpy as np
+import os
+import yaml
 
 from modules.camera.preprocessing.edge_preprocessing import EdgePreprocessor
 from modules.camera.preprocessing.image_preprocessing import ImagePreprocessor
@@ -69,14 +71,8 @@ if __name__ == '__main__':
     cap.release()
     cv2.destroyAllWindows()
     
-    # Save changes into .env file
-    with open('.env', 'w') as f:
-        f.write(f"DESIRED_WIDTH={edgePreprocessor.desired_width}\n")
-        f.write(f"DESIRED_HEIGHT={edgePreprocessor.desired_height}\n")
-        f.write(f"CLIP_LIMIT={edgePreprocessor.clip_limit}\n")
-        f.write(f"TILE_GRID_SIZE={edgePreprocessor.tile_grid_size_width},{edgePreprocessor.tile_grid_size_height}\n")
-        f.write(f"CANNY_THRESHOLD={edgePreprocessor.canny_threshold1},{edgePreprocessor.canny_threshold2}\n")
-        f.write(f"COLOR={edgePreprocessor.color[0]},{edgePreprocessor.color[1]},{edgePreprocessor.color[2]}\n")
-        f.write(f"LINES={edgePreprocessor.lines_threshold},{edgePreprocessor.lines_min_line_length},{edgePreprocessor.lines_max_line_gap}\n")
-        f.write(f"ALPHA={imagePreprocessor.alpha}\n")
-        f.write(f"BETA={imagePreprocessor.beta}\n")
+    # Save changes into existing configuration file .yaml
+    with open('config/config.yml', 'w') as f:
+        f.write(edgePreprocessor.to_yaml())
+        f.write(imagePreprocessor.to_yaml())
+        f.close()

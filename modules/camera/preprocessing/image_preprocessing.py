@@ -3,6 +3,9 @@ from .parameters import Parameters
 
 class ImagePreprocessor(Parameters):
     
+    def __init__(self, params: dict = None):
+        super().__init__(image_params=params)
+    
     def resize_image(self, image):
         return cv2.resize(image, (self.desired_width, self.desired_height))
     
