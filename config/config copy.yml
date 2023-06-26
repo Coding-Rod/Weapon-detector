@@ -10,9 +10,9 @@ hardware:
 preprocessing:
   edge:
     canny_threshold:
-    - 122
-    - 172
-    clip_limit: 3.49
+    - 100
+    - 200
+    clip_limit: 2.0
     color:
     - 0
     - 0
@@ -24,7 +24,7 @@ preprocessing:
     - 8
     - 8
   image:
-    alpha: 0.85
-    beta: 33
+    alpha: 0.5
+    beta: 0.5
     height: 600
     width: 800

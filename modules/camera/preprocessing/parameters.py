@@ -4,6 +4,15 @@ import os
 import yaml
 
 class Parameters:
+    desired_width = None
+    desired_height = None
+    alpha = None
+    beta = None
+    clip_limit = None
+    tile_grid_size = None
+    canny_threshold1, canny_threshold2 = None, None
+    color = None
+    lines_threshold, lines_min_line_length, lines_max_line_gap = None, None, None
     
     def __init__(self,image_params: dict = None, edge_params: dict = None):
         if image_params:
@@ -61,4 +70,49 @@ class Parameters:
         self.alpha = value/100
     
     def set_beta(self, value):
-        self.beta = value/100
+        self.beta = value
+    
+    def get_params(self)-> dict:
+        """ Returns the parameters as a dictionary
+        edge:
+            canny_threshold:
+            - ...
+            - ...
+            clip_limit: ...
+            color:
+            - ...
+            - ...
+            - ...
+            lines_max_line_gap: ...
+            lines_min_line_length: ...
+            lines_threshold: ...
+            tile_grid_size:
+            - ...
+            - ...
+        image:
+            alpha: ...
+            beta: ...
+            height: ...
+            width: ...
+
+        Returns:
+            dict: Contains both the image and edge parameters
+        """
+        return {
+            "image": {
+                "width": self.desired_width,
+                "height": self.desired_height,
+                "alpha": self.alpha,
+                "beta": self.beta
+            },
+            "edge": {
+                "clip_limit": self.clip_limit,
+                "tile_grid_size": list(self.tile_grid_size) if self.tile_grid_size else None,
+                "canny_threshold": [self.canny_threshold1, self.canny_threshold2],
+                "color": list(self.color) if self.color else None,
+                "lines_threshold": self.lines_threshold,
+                "lines_min_line_length": self.lines_min_line_length,
+                "lines_max_line_gap": self.lines_max_line_gap
+            }
+        }
+            

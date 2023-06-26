@@ -52,15 +52,15 @@ class Camera(Detect):
                     self.imagePreprocessor.change_contrast_and_brightness,
                 )
                 
-                frame = self.edgePreprocessor.pipeline(frame,
-                    self.edgePreprocessor.convert_to_grayscale,
-                    self.edgePreprocessor.apply_clahe,
-                    # self.preprocessor.perform_histogram_equalization,
-                    self.edgePreprocessor.detect_edges,
-                    self.edgePreprocessor.detect_lines,
-                    self.edgePreprocessor.dilate_image,
-                    self.edgePreprocessor.invert_image,
-                )
+                # frame = self.edgePreprocessor.pipeline(frame,
+                #     self.edgePreprocessor.convert_to_grayscale,
+                #     self.edgePreprocessor.apply_clahe,
+                #     # self.preprocessor.perform_histogram_equalization,
+                #     self.edgePreprocessor.detect_edges,
+                #     self.edgePreprocessor.detect_lines,
+                #     self.edgePreprocessor.dilate_image,
+                #     self.edgePreprocessor.invert_image,
+                # )
             except cv2.error:
                 print("Camera is not available")
             
@@ -101,8 +101,8 @@ class Camera(Detect):
             
             if success:
                 if self.detect:
-                    results = self.detection(frame)
-                    if results:
+                    detected, results = self.detection(frame)
+                    if detected:
                         self.pinOut.status = 'alarm'
                         self.pinOut.write_rgb(True, False, False)
                         self.pinOut.write_relay(1)
@@ -127,6 +127,11 @@ class Camera(Detect):
                     frame = cv2.flip(frame, 1)
 
                 try:
+                    #Add results as bounding boxes: {x:..., y:..., width:..., height:..., class:..., confidence:...}
+                    # if results:
+                    #     for result in results:
+                    #         cv2.rectangle(frame, (result['x'], result['y']), (result['x']+result['width'], result['y']+result['height']), (0, 255, 0), 2)
+                    #         cv2.putText(frame, f"{result['class']}: {result['confidence']}", (result['x'], result['y']-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
                     _, buffer = cv2.imencode('.jpg', cv2.flip(frame, 1))
                     frame = buffer.tobytes()
                     yield (b'--frame\r\n'

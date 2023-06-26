@@ -28,3 +28,5 @@ class ImagePreprocessor(Parameters):
         Returns the preprocessed image with the original image, multiplying both images
         """
         return self.image
+    def get_params(self):
+        return super().get_params()['image']

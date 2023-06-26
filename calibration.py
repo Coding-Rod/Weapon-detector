@@ -8,7 +8,6 @@ with open("config/config.yml", 'r') as ymlfile:
     cfg = yaml.safe_load(ymlfile)
     image, edge = cfg['preprocessing']['image'], cfg['preprocessing']['edge']
     
-
 if __name__ == '__main__':
     imagePreprocessor = ImagePreprocessor(image)
     edgePreprocessor = EdgePreprocessor(edge)
@@ -29,8 +28,8 @@ if __name__ == '__main__':
     cv2.createTrackbar("Lines Threshold", "Calibration", edgePreprocessor.lines_threshold, 255, edgePreprocessor.set_lines_threshold)
     cv2.createTrackbar("Lines Min Line Length", "Calibration", edgePreprocessor.lines_min_line_length, 255, edgePreprocessor.set_lines_min_line_length)
     cv2.createTrackbar("Lines Max Line Gap", "Calibration", edgePreprocessor.lines_max_line_gap, 255, edgePreprocessor.set_lines_max_line_gap)
-    cv2.createTrackbar("Alpha", "Calibration", int(imagePreprocessor.alpha * 100), 200, imagePreprocessor.set_alpha)
-    cv2.createTrackbar("Beta", "Calibration", int(imagePreprocessor.beta), 255, imagePreprocessor.set_beta)
+    cv2.createTrackbar("Alpha", "Calibration", int(imagePreprocessor.alpha * 100), 255, imagePreprocessor.set_alpha)
+    cv2.createTrackbar("Beta", "Calibration", int(imagePreprocessor.beta), 127, imagePreprocessor.set_beta)
     
     cv2.imshow("Calibration", np.zeros((1, 500, 3), np.uint8))
     
@@ -66,7 +65,6 @@ if __name__ == '__main__':
         
         # result = preprocessor.get_preprocessed_image_with_original(frame)
         cv2.imshow('Result', result)
-        
         c = cv2.waitKey(1)
         if c == 27: # ESC
             break
@@ -74,6 +72,10 @@ if __name__ == '__main__':
     cap.release()
     cv2.destroyAllWindows()
     
+    cfg['preprocessing']['image'] = imagePreprocessor.get_params()
+    cfg['preprocessing']['edge'] = edgePreprocessor.get_params()
+    
     # Save changes into existing configuration file .yaml
     with open('config/config.yml', 'w') as f:
         yaml.dump(cfg, f)
+        print("Changes saved into config.yml")

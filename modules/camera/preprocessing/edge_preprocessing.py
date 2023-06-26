@@ -104,3 +104,6 @@ class EdgePreprocessor(Parameters):
         
         # Apply the color to the edges        
         return np.where(bw == (255, 255, 255), self.color, bw).astype(np.uint8)
+
+    def get_params(self):
+        return super().get_params()['edge']

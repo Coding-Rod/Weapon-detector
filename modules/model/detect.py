@@ -34,14 +34,14 @@ class Detect:
 
         return momentum >= threshold, queue
     
-    def detection(self, frame: np.ndarray) -> list:
+    def detection(self, frame: np.ndarray) -> tuple:
         """ This function is used to detect weapons in a frame
 
         Args:
             frame (np.ndarray): The frame to be processed
 
         Returns:
-            list: The list of detected weapons with their classes and amounts
+            tuple: Return two values: A boolean value that determines if detection is correct and a list of bounding boxes detected in the last frame
         """
         
         frame = cv2.flip(frame, 0)
@@ -82,12 +82,11 @@ class Detect:
                         print("Weapon detected")
                         self.queues[0].clear()
                         self.queues[1].clear()
-                        return {
-                            ('knives', 'guns')[int(class_name == 'gun')]: 1,
-                            ('knives', 'guns')[int(class_name != 'gun')]: 0,
-                        }
+                        return True, bounding_boxes
+                else:
+                    return False, bounding_boxes
             
             
         except IndexError:
             print("response: ", response)
-            return
+            return False, []
