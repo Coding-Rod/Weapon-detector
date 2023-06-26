@@ -1,20 +1,23 @@
 import cv2
 import numpy as np
-import os
 import yaml
-
 from modules.camera.preprocessing.edge_preprocessing import EdgePreprocessor
 from modules.camera.preprocessing.image_preprocessing import ImagePreprocessor
 
+with open("config/config.yml", 'r') as ymlfile:
+    cfg = yaml.safe_load(ymlfile)
+    image, edge = cfg['preprocessing']['image'], cfg['preprocessing']['edge']
+    
+
 if __name__ == '__main__':
-    edgePreprocessor = EdgePreprocessor()
-    imagePreprocessor = ImagePreprocessor()
+    imagePreprocessor = ImagePreprocessor(image)
+    edgePreprocessor = EdgePreprocessor(edge)
     
     cv2.namedWindow("Calibration")
 
     # Create trackbars for every attribute
-    cv2.createTrackbar("Desired Width", "Calibration", edgePreprocessor.desired_width, 1000, edgePreprocessor.set_desired_width)
-    cv2.createTrackbar("Desired Height", "Calibration", edgePreprocessor.desired_height, 1000, edgePreprocessor.set_desired_height)
+    cv2.createTrackbar("Desired Width", "Calibration", imagePreprocessor.desired_width, 1000, imagePreprocessor.set_desired_width)
+    cv2.createTrackbar("Desired Height", "Calibration", imagePreprocessor.desired_height, 1000, imagePreprocessor.set_desired_height)
     cv2.createTrackbar("Clip Limit", "Calibration", int(edgePreprocessor.clip_limit * 100), 1000, edgePreprocessor.set_clip_limit)
     cv2.createTrackbar("Tile Grid Size Width", "Calibration", edgePreprocessor.tile_grid_size[0], 128, edgePreprocessor.set_tile_grid_size_width)
     cv2.createTrackbar("Tile Grid Size Height", "Calibration", edgePreprocessor.tile_grid_size[1], 128, edgePreprocessor.set_tile_grid_size_height)
@@ -43,18 +46,18 @@ if __name__ == '__main__':
         cv2.imshow('Input', frame)
 
         image = imagePreprocessor.pipeline(frame,
+            imagePreprocessor.resize_image,
             imagePreprocessor.change_contrast_and_brightness,
         )
         
         cv2.imshow('Preprocessed', image)
 
         result = edgePreprocessor.pipeline(image,
-            edgePreprocessor.resize_image,
             edgePreprocessor.convert_to_grayscale,
             edgePreprocessor.apply_clahe,
             # preprocessor.perform_histogram_equalization,
             edgePreprocessor.detect_edges,
-            edgePreprocessor.detect_lines,
+            edgePreprocessor.detect_lines, # Filtro pasobajas
             edgePreprocessor.dilate_image,
             edgePreprocessor.invert_image,
         )
@@ -73,6 +76,4 @@ if __name__ == '__main__':
     
     # Save changes into existing configuration file .yaml
     with open('config/config.yml', 'w') as f:
-        f.write(edgePreprocessor.to_yaml())
-        f.write(imagePreprocessor.to_yaml())
-        f.close()
+        yaml.dump(cfg, f)
