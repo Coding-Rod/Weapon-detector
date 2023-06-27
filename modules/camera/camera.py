@@ -48,7 +48,7 @@ class Camera(Detect):
             try:
                 frame = self.imagePreprocessor.pipeline(frame,
                     self.imagePreprocessor.resize_image,
-                    # self.imagePreprocessor.flip_image,
+                    self.imagePreprocessor.flip_image,
                     self.imagePreprocessor.change_contrast_and_brightness,
                 )
                 
@@ -100,7 +100,7 @@ class Camera(Detect):
                 self.start_time = time.time()
             
             if success:
-                if self.detect:
+                if self.detect: # If motion is detected
                     detected, results = self.detection(frame)
                     if detected:
                         self.pinOut.status = 'alarm'
@@ -108,11 +108,29 @@ class Camera(Detect):
                         self.pinOut.write_relay(1)
                         
                         print("-"*10, results, "-"*10)
-                        self.client.new_alert_notification(f"Weapon(s) detected: {results['guns']} gun(s), {results['knives']} knife(s), at {self.client.node_config['location']} in node {self.client.node_config['node_id']}")
+                        self.client.new_alert_notification(f"Weapon detected at {self.client.node_config['location']} in node {self.client.node_config['node_id']}")
                         # raise Exception("Weapon detected")
                         self.detect = 0
                         self.capture = 1
                         self.start_time = time.time()
+                    #Add results as bounding boxes: {x:..., y:..., width:..., height:..., class:..., confidence:...}
+                    if results:
+                        try:
+                            print(results)
+                            start_point = int(results[0]['x'] - results[0]['width']//2), int(results[0]['y'] - results[0]['height']//2)
+                            end_point = int(results[0]['x'] + results[0]['width']//2), int(results[0]['y'] + results[0]['height']//2)
+                            cv2.rectangle(frame, 
+                                start_point,
+                                end_point,
+                                (0, 255, 0),
+                                2)
+                            cv2.putText(frame, f"{results[0]['class']}: {results[0]['confidence']}", (start_point[0], start_point[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
+                            # print(results[0]['class'], results[0]['confidence'])
+                            # print(frame)
+                        except (IndexError, KeyError) as e:
+                            print(e)
+                    
+                
                 if self.capture:
                     self.capture = 0
                     now = datetime.datetime.now()
@@ -127,11 +145,6 @@ class Camera(Detect):
                     frame = cv2.flip(frame, 1)
 
                 try:
-                    #Add results as bounding boxes: {x:..., y:..., width:..., height:..., class:..., confidence:...}
-                    # if results:
-                    #     for result in results:
-                    #         cv2.rectangle(frame, (result['x'], result['y']), (result['x']+result['width'], result['y']+result['height']), (0, 255, 0), 2)
-                    #         cv2.putText(frame, f"{result['class']}: {result['confidence']}", (result['x'], result['y']-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
                     _, buffer = cv2.imencode('.jpg', cv2.flip(frame, 1))
                     frame = buffer.tobytes()
                     yield (b'--frame\r\n'
@@ -165,7 +178,7 @@ class Camera(Detect):
                 elif not self.rec:
                     self.out.release()
 
-        return render_template('index.html', fps=self.fps, status=self.pinOut.status)
+        return render_template('index.html')
     
     def cleanup(self):
         self.camera.release()

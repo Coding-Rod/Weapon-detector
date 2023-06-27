@@ -34,10 +34,11 @@ class App(Camera):
         Responses:
             - 200: The password is correct
             - 401: The password is incorrect
-        """        
-        data = json.loads(str(request.data))
+        """
+        data = json.loads(str(request.data)[2:-1])
         password = data['password']
         if self.security.verifyPassword(password):
+            self.pinOut.status = 'password'
             return jsonify({'status': 200, 'message': 'Password correct'})
         else:
             return jsonify({'status': 401, 'message': 'Password incorrect'})
@@ -50,7 +51,7 @@ class App(Camera):
             - 200: The password is changed
             - 401: The password is incorrect
         """        
-        data = json.loads(str(request.data))
+        data = json.loads(str(request.data)[2:-1])
         old_password = data['old_password']
         new_password = data['new_password']
         try:
