@@ -92,6 +92,8 @@ class Camera(Detect):
                 self.pinOut.write_relay(1)
                 self.pinOut.write_rgb(True, False, False)
                 self.start_time = time.time()
+                
+                
             
             elif (self.pinOut.status == 'alarm' and time.time() - self.start_time > 60) or self.pinOut.status == 'password':
                 self.pinOut.status = 'standby'
@@ -99,7 +101,6 @@ class Camera(Detect):
                 self.pinOut.write_rgb(False, False, True)
                 self.pinOut.write_relay(0)
                 self.start_time = time.time()
-                
             
             if success:
                 if self.detect: # If motion is detected
@@ -110,7 +111,10 @@ class Camera(Detect):
                         
                         print("-"*10, results, "-"*10)
                         weapon = results[0]['class']
-                        self.client.new_alert_notification(f"{weapon.title() if weapon else 'Weapon'} detected at {self.client.node_config['location']} in node {self.client.node_config['node_id']}")
+                        try:
+                            self.client.new_alert_notification(f"{weapon.title()} detected at {self.client.node_config['location']} in node {self.client.node_config['node_id']}")
+                        except AttributeError:
+                            self.pinOut.status = 'standby'
                         # raise Exception("Weapon detected")
                         self.detect = 0
                         self.capture = 1
@@ -130,6 +134,9 @@ class Camera(Detect):
                         except (IndexError, KeyError) as e:
                             print(e)
                     
+                if self.pinOut.status == 'sent':
+                    message = f"Weapon detected, the alarm will sound in {15 - int(time.time() - self.start_time)} seconds"
+                    cv2.putText(frame, message, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 255), 2)
                 
                 if self.capture:
                     self.capture = 0
@@ -145,7 +152,7 @@ class Camera(Detect):
                     frame = cv2.flip(frame, 1)
 
                 try:
-                    _, buffer = cv2.imencode('.jpg', cv2.flip(frame, 1))
+                    _, buffer = cv2.imencode('.jpg', frame)
                     frame = buffer.tobytes()
                     yield (b'--frame\r\n'
                            b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')

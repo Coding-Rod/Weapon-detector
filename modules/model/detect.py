@@ -12,7 +12,7 @@ class Detect:
     queues = [deque(maxlen=8), deque(maxlen=8)]
     constant = 0.5
         
-    def filter_gigant_bounding_boxes(self, bounding_boxes: list, threshold: float = 0.8, image_shape: tuple = (640, 640, 3)) -> list:
+    def filter_gigant_bounding_boxes(self, bounding_boxes: list, threshold: float = 0.7, image_shape: tuple = (640, 640, 3)) -> list:
         """ This function is used to filter bounding boxes that are too big
         
         Args:
@@ -23,7 +23,7 @@ class Detect:
             list: List of bounding boxes
         """
         try:
-            return list(filter(lambda x: x['xmax'] - x['xmin'] < image_shape[0] * 0.8 and x['ymax'] - x['ymin'] < image_shape[1] * 0.8, bounding_boxes))
+            return list(filter(lambda x: x['xmax'] - x['xmin'] < image_shape[0] * threshold and x['ymax'] - x['ymin'] < image_shape[1] * threshold, bounding_boxes))
         except (ValueError, KeyError):
             return bounding_boxes
         
