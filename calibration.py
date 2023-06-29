@@ -17,17 +17,17 @@ if __name__ == '__main__':
     # Create trackbars for every attribute
     cv2.createTrackbar("Desired Width", "Calibration", imagePreprocessor.desired_width, 1000, imagePreprocessor.set_desired_width)
     cv2.createTrackbar("Desired Height", "Calibration", imagePreprocessor.desired_height, 1000, imagePreprocessor.set_desired_height)
-    cv2.createTrackbar("Clip Limit", "Calibration", int(edgePreprocessor.clip_limit * 100), 1000, edgePreprocessor.set_clip_limit)
-    cv2.createTrackbar("Tile Grid Size Width", "Calibration", edgePreprocessor.tile_grid_size[0], 128, edgePreprocessor.set_tile_grid_size_width)
-    cv2.createTrackbar("Tile Grid Size Height", "Calibration", edgePreprocessor.tile_grid_size[1], 128, edgePreprocessor.set_tile_grid_size_height)
-    cv2.createTrackbar("Canny Threshold 1", "Calibration", edgePreprocessor.canny_threshold1, 255, edgePreprocessor.set_canny_threshold1)
-    cv2.createTrackbar("Canny Threshold 2", "Calibration", edgePreprocessor.canny_threshold2, 255, edgePreprocessor.set_canny_threshold2)
-    cv2.createTrackbar("Color Red Channel", "Calibration", edgePreprocessor.color[0], 255, edgePreprocessor.set_red_color)
-    cv2.createTrackbar("Color Green Channel", "Calibration", edgePreprocessor.color[1], 255, edgePreprocessor.set_green_color)
-    cv2.createTrackbar("Color Blue Channel", "Calibration", edgePreprocessor.color[2], 255, edgePreprocessor.set_blue_color)
-    cv2.createTrackbar("Lines Threshold", "Calibration", edgePreprocessor.lines_threshold, 255, edgePreprocessor.set_lines_threshold)
-    cv2.createTrackbar("Lines Min Line Length", "Calibration", edgePreprocessor.lines_min_line_length, 255, edgePreprocessor.set_lines_min_line_length)
-    cv2.createTrackbar("Lines Max Line Gap", "Calibration", edgePreprocessor.lines_max_line_gap, 255, edgePreprocessor.set_lines_max_line_gap)
+    # cv2.createTrackbar("Clip Limit", "Calibration", int(edgePreprocessor.clip_limit * 100), 1000, edgePreprocessor.set_clip_limit)
+    # cv2.createTrackbar("Tile Grid Size Width", "Calibration", edgePreprocessor.tile_grid_size[0], 128, edgePreprocessor.set_tile_grid_size_width)
+    # cv2.createTrackbar("Tile Grid Size Height", "Calibration", edgePreprocessor.tile_grid_size[1], 128, edgePreprocessor.set_tile_grid_size_height)
+    # cv2.createTrackbar("Canny Threshold 1", "Calibration", edgePreprocessor.canny_threshold1, 255, edgePreprocessor.set_canny_threshold1)
+    # cv2.createTrackbar("Canny Threshold 2", "Calibration", edgePreprocessor.canny_threshold2, 255, edgePreprocessor.set_canny_threshold2)
+    # cv2.createTrackbar("Color Red Channel", "Calibration", edgePreprocessor.color[0], 255, edgePreprocessor.set_red_color)
+    # cv2.createTrackbar("Color Green Channel", "Calibration", edgePreprocessor.color[1], 255, edgePreprocessor.set_green_color)
+    # cv2.createTrackbar("Color Blue Channel", "Calibration", edgePreprocessor.color[2], 255, edgePreprocessor.set_blue_color)
+    # cv2.createTrackbar("Lines Threshold", "Calibration", edgePreprocessor.lines_threshold, 255, edgePreprocessor.set_lines_threshold)
+    # cv2.createTrackbar("Lines Min Line Length", "Calibration", edgePreprocessor.lines_min_line_length, 255, edgePreprocessor.set_lines_min_line_length)
+    # cv2.createTrackbar("Lines Max Line Gap", "Calibration", edgePreprocessor.lines_max_line_gap, 255, edgePreprocessor.set_lines_max_line_gap)
     cv2.createTrackbar("Alpha", "Calibration", int(imagePreprocessor.alpha * 100), 255, imagePreprocessor.set_alpha)
     cv2.createTrackbar("Beta", "Calibration", int(imagePreprocessor.beta), 127, imagePreprocessor.set_beta)
     
@@ -46,25 +46,26 @@ if __name__ == '__main__':
 
         image = imagePreprocessor.pipeline(frame,
             imagePreprocessor.resize_image,
+            imagePreprocessor.flip_image,
             imagePreprocessor.change_contrast_and_brightness,
         )
         
         cv2.imshow('Preprocessed', image)
 
-        result = edgePreprocessor.pipeline(image,
-            edgePreprocessor.convert_to_grayscale,
-            edgePreprocessor.apply_clahe,
-            # preprocessor.perform_histogram_equalization,
-            edgePreprocessor.detect_edges,
-            edgePreprocessor.detect_lines, # Filtro pasobajas
-            edgePreprocessor.dilate_image,
-            edgePreprocessor.invert_image,
-        )
+        # result = edgePreprocessor.pipeline(image,
+        #     edgePreprocessor.convert_to_grayscale,
+        #     edgePreprocessor.apply_clahe,
+        #     # preprocessor.perform_histogram_equalization,
+        #     edgePreprocessor.detect_edges,
+        #     edgePreprocessor.detect_lines, # Filtro pasobajas
+        #     edgePreprocessor.dilate_image,
+        #     edgePreprocessor.invert_image,
+        # )
         # Inverted edges
-        cv2.imshow('Edges', cv2.bitwise_not(edgePreprocessor.get_edges()))
+        # cv2.imshow('Edges', cv2.bitwise_not(edgePreprocessor.get_edges()))
         
         # result = preprocessor.get_preprocessed_image_with_original(frame)
-        cv2.imshow('Result', result)
+        # cv2.imshow('Result', result)
         c = cv2.waitKey(1)
         if c == 27: # ESC
             break

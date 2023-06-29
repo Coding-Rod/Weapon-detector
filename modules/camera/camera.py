@@ -108,12 +108,13 @@ class Camera(Detect):
                         self.pinOut.write_relay(1)
                         
                         print("-"*10, results, "-"*10)
-                        self.client.new_alert_notification(f"Weapon detected at {self.client.node_config['location']} in node {self.client.node_config['node_id']}")
+                        weapon = results[0]['class']
+                        self.client.new_alert_notification(f"{weapon.title()} detected at {self.client.node_config['location']} in node {self.client.node_config['node_id']}")
                         # raise Exception("Weapon detected")
                         self.detect = 0
                         self.capture = 1
                         self.start_time = time.time()
-                    #Add results as bounding boxes: {x:..., y:..., width:..., height:..., class:..., confidence:...}
+                    
                     if results:
                         try:
                             print(results)
@@ -125,8 +126,6 @@ class Camera(Detect):
                                 (0, 255, 0),
                                 2)
                             cv2.putText(frame, f"{results[0]['class']}: {results[0]['confidence']}", (start_point[0], start_point[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
-                            # print(results[0]['class'], results[0]['confidence'])
-                            # print(frame)
                         except (IndexError, KeyError) as e:
                             print(e)
                     

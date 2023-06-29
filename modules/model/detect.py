@@ -6,9 +6,9 @@ import json
 import cv2
 
 class Detect:
-    curl_command = 'curl --silent -d "@-" "http://localhost:9001/knives-n-guns-backup/1?api_key=uWT4WzrPNeKaypAQ3Ah7"'
+    curl_command = 'curl --silent -d "@-" "http://localhost:9001/weapons-28-jun/4?api_key=7rRyq2IXnl3yEIKk7GCw"'
     momentum_thresholds = 0.85, 0.7
-    confidence_thresholds = 0.5, 0.2
+    confidence_thresholds = 0.6, 0.2
     queues = [deque(maxlen=8), deque(maxlen=8)]
     constant = 0.5
         
@@ -75,8 +75,6 @@ class Detect:
             tuple: Return two values: A boolean value that determines if detection is correct and a list of bounding boxes detected in the last frame
         """
         predictions = None
-        frame = cv2.flip(frame, 0)
-        frame = cv2.resize(frame, (640, 640))
 
         # Convert the frame to base64
         _, img_encoded = cv2.imencode(".jpg", frame)

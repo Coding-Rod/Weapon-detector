@@ -4,6 +4,6 @@ if ! [ -x "$(command -v curl)" ]; then
 fi
 
 base64 images/sample.jpg | curl -d @- \
-"http://localhost:9001/knives-n-guns-backup/1?api_key=uWT4WzrPNeKaypAQ3Ah7"
+"http://localhost:9001/weapons-28-jun/4?api_key=7rRyq2IXnl3yEIKk7GCw"
 
 sudo python3 app.py
