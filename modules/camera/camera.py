@@ -24,6 +24,7 @@ class Camera(Detect):
         self.imagePreprocessor = ImagePreprocessor(image_preprocessing_params)
         self.edgePreprocessor = EdgePreprocessor(edge_preprocessing_params)
         self.setup(camera)
+        super().__init__()
     
     def setup(self, camera: int):
         os.makedirs('images', exist_ok=True)
@@ -52,24 +53,17 @@ class Camera(Detect):
                     self.imagePreprocessor.change_contrast_and_brightness,
                 )
                 
-                # frame = self.edgePreprocessor.pipeline(frame,
-                #     self.edgePreprocessor.convert_to_grayscale,
-                #     self.edgePreprocessor.apply_clahe,
-                #     # self.preprocessor.perform_histogram_equalization,
-                #     self.edgePreprocessor.detect_edges,
-                #     self.edgePreprocessor.detect_lines,
-                #     self.edgePreprocessor.dilate_image,
-                #     self.edgePreprocessor.invert_image,
-                # )
             except cv2.error:
                 print("Camera is not available")
             
-            # frame = cv2.flip(frame, 0)
             
-            # print("Actual time: ", time.time())
-            # print("Start time: ", self.start_time)
-            # print("Elapsed time: ", time.time() - self.start_time)
-            
+            if self.pinOut.status == 'learning':
+                self.pinOut.write_rgb(False, True, True)
+                self.learn_background(frame)
+                # Learn the background (send frame to background remover)
+                if self.pinOut.read_pin():
+                    # Stop learning the background and restore latest static background
+                    pass
             
             if self.pinOut.status == 'standby' and self.pinOut.read_pin():
                 self.pinOut.status = 'running'
@@ -77,6 +71,13 @@ class Camera(Detect):
                 self.pinOut.write_rgb(False, True, True)
                 self.detect = 1
                 # print('Motion detected')
+            
+            # If standby for 20 seconds, set status to learning
+            elif self.pinOut.status == 'standby' and (time.time() - self.start_time) > 20:
+                self.pinOut.status = 'learning'
+                print(self.pinOut.status)
+                self.pinOut.write_rgb(True, True, True)
+                self.start_time = time.time()
             
             elif self.pinOut.status == 'running' and (time.time() - self.start_time) > 12:
                 # print('No motion detected')
@@ -92,8 +93,6 @@ class Camera(Detect):
                 self.pinOut.write_relay(1)
                 self.pinOut.write_rgb(True, False, False)
                 self.start_time = time.time()
-                
-                
             
             elif (self.pinOut.status == 'alarm' and time.time() - self.start_time > 60) or self.pinOut.status == 'password':
                 self.pinOut.status = 'standby'
