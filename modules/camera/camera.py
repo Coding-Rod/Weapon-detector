@@ -86,30 +86,31 @@ class Camera(Detect):
                 self.start_time = time.time()
                 self.detect = 0
             
-            elif (self.pinOut.status == 'alarm' and time.time() - self.start_time > 60) or self.pinOut.status == 'password':
-                self.pinOut.status = 'sent'
+            elif self.pinOut.status == 'sent' and time.time() - self.start_time > 15:
+                self.pinOut.status = 'alarm'
                 print(self.pinOut.status)
-                self.pinOut.write_rgb(True, False, True)
-                self.pinOut.write_relay(0)
+                self.pinOut.write_relay(1)
+                self.pinOut.write_rgb(True, False, False)
                 self.start_time = time.time()
-                
-            elif self.pinOut.status == 'sent' and time.time() - self.start_time > 10:
+            
+            elif (self.pinOut.status == 'alarm' and time.time() - self.start_time > 60) or self.pinOut.status == 'password':
                 self.pinOut.status = 'standby'
                 print(self.pinOut.status)
                 self.pinOut.write_rgb(False, False, True)
+                self.pinOut.write_relay(0)
                 self.start_time = time.time()
+                
             
             if success:
                 if self.detect: # If motion is detected
                     detected, results = self.detection(frame)
                     if detected:
-                        self.pinOut.status = 'alarm'
-                        self.pinOut.write_rgb(True, False, False)
-                        self.pinOut.write_relay(1)
+                        self.pinOut.status = 'sent'
+                        self.pinOut.write_rgb(True, False, True)
                         
                         print("-"*10, results, "-"*10)
                         weapon = results[0]['class']
-                        self.client.new_alert_notification(f"{weapon.title()} detected at {self.client.node_config['location']} in node {self.client.node_config['node_id']}")
+                        self.client.new_alert_notification(f"{weapon.title() if weapon else 'Weapon'} detected at {self.client.node_config['location']} in node {self.client.node_config['node_id']}")
                         # raise Exception("Weapon detected")
                         self.detect = 0
                         self.capture = 1

@@ -6,4 +6,4 @@ fi
 base64 images/sample.jpg | curl -d @- \
 "http://localhost:9001/weapons-28-jun/4?api_key=7rRyq2IXnl3yEIKk7GCw"
 
-sudo python3 app.py
+python3 app.py

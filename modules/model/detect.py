@@ -107,7 +107,7 @@ class Detect:
                 for bounding_box in bounding_boxes:
                     class_name = bounding_box['class']
                     confidence = bounding_box['confidence']
-                    momentum_result, self.queues[i] = self.momentum(1 if class_name else 0, float(confidence), float(threshold), self.queues[i], self.constant, verbose=True)
+                    momentum_result, self.queues[i] = self.momentum(1 if class_name else 0, float(confidence), float(threshold), self.queues[i], self.constant, verbose=False)
                     
                     # print("Class: ", class_name, end=' ')
                     # print("Momentum: ", momentum_result)

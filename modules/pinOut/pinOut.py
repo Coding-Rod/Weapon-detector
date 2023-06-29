@@ -39,7 +39,7 @@ class PinOut:
             value (bool): The value to write to the relay pin.
         """
         print('Relay value: ', value)
-        GPIO.output(self.relay_pin, not value)
+        GPIO.output(self.relay_pin, value)
             
     def set_sent_status(self):
         """ Set the status to sent and start the timer. """
