@@ -8,6 +8,7 @@ from threading import Thread
 from ..model.detect import Detect
 from .preprocessing.edge_preprocessing import EdgePreprocessor
 from .preprocessing.image_preprocessing import ImagePreprocessor
+from .preprocessing.background_remover import BackgroundRemover
 
 class Camera(Detect):
     def __init__(self, camera: int = 0, image_preprocessing_params: dict = None, edge_preprocessing_params: dict = None):
@@ -23,6 +24,7 @@ class Camera(Detect):
         self.start_time = 0
         self.imagePreprocessor = ImagePreprocessor(image_preprocessing_params)
         self.edgePreprocessor = EdgePreprocessor(edge_preprocessing_params)
+        self.background_remover = BackgroundRemover()
         self.setup(camera)
         super().__init__()
     
@@ -40,10 +42,12 @@ class Camera(Detect):
         """
         
         # Set the status to standby
-        self.pinOut.status = 'standby'
-        self.pinOut.write_rgb(False, False, True)
+        self.pinOut.status = 'learning'
+        self.pinOut.write_rgb(True, True, True)
+        self.start_time = time.time()
         
         while True:
+            # print("Time: ", time.time() - self.start_time, " Status: ", self.pinOut.status)
             success, frame = self.camera.read()
             
             try:
@@ -56,28 +60,46 @@ class Camera(Detect):
             except cv2.error:
                 print("Camera is not available")
             
+            # region: Background removal
             
-            if self.pinOut.status == 'learning':
-                self.pinOut.write_rgb(False, True, True)
-                self.learn_background(frame)
+            # If standby for 20 seconds, set status to learning
+            if self.pinOut.status == 'standby' and (time.time() - self.start_time) > 300:
+                self.pinOut.status = 'learning'
+                print(self.pinOut.status)
+                self.pinOut.write_rgb(True, True, True)
+                self.start_time = time.time()
+            
+            elif self.pinOut.status == 'learning' and (time.time() - self.start_time) > self.background_remover.learning_time:
+                print("Background learned in ", time.time() - self.start_time, " seconds")
+                self.pinOut.status = 'standby'
+                self.pinOut.write_rgb(False, False, True)
+                self.start_time = time.time()
+                self.background_remover.set_static_background()
+                print("Background learned")
+                
+            elif self.pinOut.status == 'learning':
+                # Add message to frame
+                message = "Please be out of the frame for " + str(int(self.background_remover.learning_time - (time.time() - self.start_time))) + "s"
+                self.pinOut.write_rgb(bool(int(time.time()*4 - self.start_time) % 2), bool(int(time.time()*4 - self.start_time) % 2), bool(int(time.time()*4 - self.start_time) % 2))
+                frame = cv2.putText(frame, message, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 1, cv2.LINE_AA)
+                self.background_remover.learn_background(frame)
                 # Learn the background (send frame to background remover)
                 if self.pinOut.read_pin():
-                    # Stop learning the background and restore latest static background
-                    pass
+                    print("Motion detected while learning background")
+                    print("Background learning stopped")
+                    self.pinOut.status = 'standby'
+                    self.pinOut.write_rgb(False, False, True)
+                    self.start_time = time.time()
+                
+            # endregion: Background removal
             
+            # region: State machine
             if self.pinOut.status == 'standby' and self.pinOut.read_pin():
                 self.pinOut.status = 'running'
                 print(self.pinOut.status)
                 self.pinOut.write_rgb(False, True, True)
                 self.detect = 1
                 # print('Motion detected')
-            
-            # If standby for 20 seconds, set status to learning
-            elif self.pinOut.status == 'standby' and (time.time() - self.start_time) > 20:
-                self.pinOut.status = 'learning'
-                print(self.pinOut.status)
-                self.pinOut.write_rgb(True, True, True)
-                self.start_time = time.time()
             
             elif self.pinOut.status == 'running' and (time.time() - self.start_time) > 12:
                 # print('No motion detected')
@@ -101,9 +123,15 @@ class Camera(Detect):
                 self.pinOut.write_relay(0)
                 self.start_time = time.time()
             
+            # endregion: State machine
+            
             if success:
                 if self.detect: # If motion is detected
-                    detected, results = self.detection(frame)
+                    try:
+                        frame_wo_bg = self.background_remover.remove_background(frame)
+                    except Exception as e:
+                        print(e)
+                    detected, results = self.detection(frame_wo_bg)
                     if detected:
                         self.pinOut.status = 'sent'
                         self.pinOut.write_rgb(True, False, True)
@@ -121,7 +149,7 @@ class Camera(Detect):
                     
                     if results:
                         try:
-                            print(results)
+                            # print(results)
                             start_point = int(results[0]['x'] - results[0]['width']//2), int(results[0]['y'] - results[0]['height']//2)
                             end_point = int(results[0]['x'] + results[0]['width']//2), int(results[0]['y'] + results[0]['height']//2)
                             cv2.rectangle(frame, 

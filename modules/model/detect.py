@@ -65,16 +65,21 @@ class Detect:
 
         return momentum >= threshold, queue
     
-    def detection(self, frame: np.ndarray) -> tuple:
+    def detection(self, frame: np.ndarray, show: bool=False) -> tuple:
         """ This function is used to detect weapons in a frame
 
         Args:
             frame (np.ndarray): The frame to be processed
+            show (bool, optional): Show the frame with bounding boxes. Defaults to False.
 
         Returns:
             tuple: Return two values: A boolean value that determines if detection is correct and a list of bounding boxes detected in the last frame
         """
         predictions = None
+
+        if show:
+            cv2.imshow("Frame", frame)
+            cv2.waitKey(1)
 
         # Convert the frame to base64
         _, img_encoded = cv2.imencode(".jpg", frame)
@@ -124,6 +129,8 @@ class Detect:
         except IndexError:
             return False, []
         finally:
-            if predictions:
-                print("Response: ", response)
-                print("Bounding boxes: ", bounding_boxes)
+            # if predictions:
+            #     print("Response: ", response)
+            #     print("Bounding boxes: ", bounding_boxes)
+            if show:
+                cv2.destroyAllWindows()
