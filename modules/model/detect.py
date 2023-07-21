@@ -8,10 +8,13 @@ import cv2
 class Detect:
     curl_command = 'curl --silent -d "@-" "http://localhost:9001/weapons-28-jun/4?api_key=7rRyq2IXnl3yEIKk7GCw"'
     # curl_command = 'curl --silent -d "@-" "http://localhost:9001"'
-    momentum_thresholds = 0.85, 0.7
     confidence_thresholds = 0.6, 0.4
-    queues = [deque(maxlen=8), deque(maxlen=8)]
+    momentum_thresholds = [x*1.75 for x in confidence_thresholds]
+    queues = [deque(maxlen=6), deque(maxlen=6)]
     constant = 0.5
+    
+    def __init__(self):
+        print("Momentums: ", self.momentum_thresholds)
         
     def filter_gigant_bounding_boxes(self, bounding_boxes: list, threshold: float = 0.7, image_shape: tuple = (640, 640, 3)) -> list:
         """ This function is used to filter bounding boxes that are too big
@@ -44,7 +47,7 @@ class Detect:
         except (ValueError, KeyError):
             return bounding_boxes
     
-    def momentum(self, class_name: int, confidence: float, threshold: float, queue: deque, constant: float = 0.9) -> tuple:
+    def momentum(self, class_name: int, confidence: float, threshold: float, queue: deque, constant: float = 0.5) -> tuple:
         """ Momentum is a measure of how many frames in a row a given class has been, it considers a queue of the last 10 frames and returns the most frequent class in the queue, consudering a pondered sum of the last 10 frames. Each frame has a weight of a constant value between 0 and 1, where the first frame has the lowest weight confidense multiplied by the constant power to n, where n is the frame index, and the last frame has the highest weight confidense multiplied by the constant power to 0.
 
         Args:
@@ -56,9 +59,11 @@ class Detect:
         """
         calc_momentum = 0
         queue.append((class_name, confidence))
-        
-        for i in range(len(queue), 0, -1):
+        for i in range(len(queue)-1, -1, -1):
             calc_momentum += queue[i][0] * (queue[i][1] * constant ** i)
+
+        # print("Class: ", class_name, end=' ')
+        # print("Momentum: ", calc_momentum)
 
         return calc_momentum >= threshold, queue
     
@@ -82,7 +87,7 @@ class Detect:
 
         # Decode the response
         response = stdout.decode('utf-8')
-        
+
         try:        
             # Getting predictions
             bounding_boxes_text = response.split('predictions": ')[1].split('],')[0] + ']'
@@ -105,9 +110,6 @@ class Detect:
                     confidence = bounding_box['confidence']
                     momentum_result, self.queues[i] = self.momentum(1 if class_name else 0, float(confidence), float(threshold), self.queues[i], self.constant)
                     
-                    # print("Class: ", class_name, end=' ')
-                    # print("Momentum: ", momentum_result)
-                    
                     if momentum_result:
                         # print("Weapon detected")
                         self.queues[0].clear()
@@ -117,5 +119,6 @@ class Detect:
                     return False, bounding_boxes
             
             
-        except IndexError:
+        except IndexError as e:
+            print(e)
             return False, []

@@ -12,7 +12,9 @@ from modules.camera.preprocessing.image_preprocessing import ImagePreprocessor
 from modules.camera.preprocessing.background_remover import BackgroundRemover
 
 CAMERA = 2
-
+weapon = None
+last_weapon = None
+global_time = time.time()
 class APIHandler:
     server_url = 'http://127.0.0.1:5000'
     prev_status = None
@@ -37,17 +39,21 @@ class APIHandler:
 
     @status.setter
     def status(self, status):
-        self.start_time = time.time()
+        global weapon, last_weapon, global_time
+        print("Time: ", time.time() - global_time)
         data ={
             'status': status,
         }
+        
+        weapon = weapon if weapon else last_weapon
         if status == 'sent':
             data = {
                 **data,
-                weapon: self.weapon,
+                "weapon": weapon
             }
             
         if self.prev_status != status:
+            global_time = time.time()
             response = requests.post(self.server_url + '/status', json=data)
             self.prev_status = status
             print(response.json()['message'])
@@ -115,6 +121,7 @@ class InferenceHandler(APIHandler, StreamHandler, ImageHandler):
     detection = Detect()
     
     def __init__(self):
+        global global_time
         self.image_url = self.server_url + '/video_feed'
         while self.status not in ['standby', 'learning', 'starting', 'running', 'sent', 'alarm', 'password']:
             print('Waiting for server...')
@@ -122,7 +129,7 @@ class InferenceHandler(APIHandler, StreamHandler, ImageHandler):
         print('Server is ready!')
         self.status = 'learning'
         self.start_bg_time = time.time()
-        self.start_time = time.time()
+        global_time = time.time()
     
     def state_machine(self) -> bool:
         """ The state machine for the pin.
@@ -130,27 +137,23 @@ class InferenceHandler(APIHandler, StreamHandler, ImageHandler):
         Returns:
             bool: If system should be in weapon detection mode.
         """
-        # print('Status: ', self.status, ' Time: ', time.time() - self.start_time)
+        global global_time
         if self.status == 'standby' and self.motion:
             self.status = 'running' # Set status to running
-            return True # Return start time and True
         
-        if self.status == 'starting' or self.status == 'learning':
-            return False # Return False
-        
-        elif self.status == 'running' and (time.time() - self.start_time) > 12:
+        elif self.status == 'running' and (time.time() - global_time) > 12:
             self.status = 'standby' # Set status to standby
-            return False # Return False
         
-        elif self.status == 'sent' and time.time() - self.start_time > 15:
+        elif self.status == 'sent' and time.time() - global_time > 15:
             self.status = 'alarm' # Set status to alarm
-            return False # Return False
         
-        elif (self.status == 'alarm' and time.time() - self.start_time > 60) or self.status == 'password':
+        elif (self.status == 'alarm' and time.time() - global_time > 60) or self.status == 'password':
             self.status = 'standby' # Set status to standby
-            return False
-        else:
+        
+        if self.status == 'running':
             return True # Return True
+        else:
+            return False # Return False
     
     def obj_detect(self, image):
         return self.detection.detection(image)
@@ -160,6 +163,8 @@ if __name__ == '__main__':
     try:
         inferenceHandler = InferenceHandler()
         while True:
+            start_time = time.time()
+            print("Status: ", inferenceHandler.status)
             frame = inferenceHandler.get_frame()
             frame = inferenceHandler.preprocess(frame)
             weapon_detection = inferenceHandler.state_machine()
@@ -171,17 +176,19 @@ if __name__ == '__main__':
                 except Exception as e:
                     print(e)
                 detected, results = inferenceHandler.obj_detect(frame_wo_bg)
+                # print("Detected: ", detected)
+                # print("Results: ", results)
+                
                 try:
                     cv2.imshow('proprocessed frame', frame_wo_bg)
                 except cv2.error as e:
                     pass
                     
                 if detected:
-                    inferenceHandler.weapon = results[0]['class']
+                    weapon = results[0]['class']
                     inferenceHandler.status = 'sent'
                     
                     print("-"*10, results, "-"*10)
-                    weapon = results[0]['class']
                     
                     # raise Exception("Weapon detected")
                     weapon_detection = False
@@ -197,12 +204,21 @@ if __name__ == '__main__':
                             (0, 255, 0),
                             2)
                         cv2.putText(frame, f"{results[0]['class']}: {results[0]['confidence']}", (start_point[0], start_point[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
+                        last_weapon = results[0]['class']
                     except (IndexError, KeyError) as e:
                         print(e)
             if inferenceHandler.status == 'sent':
-                message = f"Alarm will sound in {15 - int(time.time() - inferenceHandler.start_time)} seconds"
+                message = f"Alarm will sound in {15 - int(time.time() - global_time)} seconds"
                 cv2.putText(frame, message, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 255), 2)
                 
+            if inferenceHandler.status == 'alarm' or inferenceHandler.status == 'sent':
+                inferenceHandler.status = inferenceHandler.get_status()
+            
+            print("Inference time: ", time.time() - global_time)
+            # Add fps to right bottom corner
+            fps = round(1.0 / (time.time() - start_time),2)
+            cv2.putText(frame, f"FPS: {fps}", (frame.shape[1] - 170, frame.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 255), 2)
+            
             inferenceHandler.send_frame(frame)
 
             if cv2.waitKey(1) & 0xFF == ord('q'):

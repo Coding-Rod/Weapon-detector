@@ -60,8 +60,6 @@ class PinOut:
         else:
             self.write_relay(False)
             
-        if self.status == 'sent':
-            self.client.new_alert_notification(f"{self.weapon.title()} detected at {self.client.node_config['location']} in node {self.client.node_config['node_id']}")
         print('Status set to: ', self.status)
 
     def get_status(self) -> str:

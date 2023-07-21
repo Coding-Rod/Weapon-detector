@@ -1,17 +1,21 @@
 import cv2
 import numpy as np
 import yaml
-from modules.camera.preprocessing.edge_preprocessing import EdgePreprocessor
 from modules.camera.preprocessing.image_preprocessing import ImagePreprocessor
-from modules.model.detect_w_trt import Detect
+
+CAMERA = 2
+
+try:
+    from modules.model.detect_w_trt import Detect
+except ModuleNotFoundError:
+    from modules.model.detect import Detect
 
 with open("config/config.yml", 'r') as ymlfile:
     cfg = yaml.safe_load(ymlfile)
-    image, edge = cfg['preprocessing']['image'], cfg['preprocessing']['edge']
+    image = cfg['preprocessing']
     
 if __name__ == '__main__':
     imagePreprocessor = ImagePreprocessor(image)
-    edgePreprocessor = EdgePreprocessor(edge)
     detection = Detect()
     
     cv2.namedWindow("Calibration")
@@ -24,7 +28,7 @@ if __name__ == '__main__':
     
     cv2.imshow("Calibration", np.zeros((1, 500, 3), np.uint8))
     
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(CAMERA)
 
     # Check if the webcam is opened correctly
     if not cap.isOpened():
@@ -72,8 +76,7 @@ if __name__ == '__main__':
     cap.release()
     cv2.destroyAllWindows()
     
-    cfg['preprocessing']['image'] = imagePreprocessor.get_params()
-    cfg['preprocessing']['edge'] = edgePreprocessor.get_params()
+    cfg['preprocessing'] = imagePreprocessor.get_params()
     
     # Save changes into existing configuration file .yaml
     with open('config/config.yml', 'w') as f:

@@ -74,8 +74,11 @@ class App(Camera):
         """
         if request.method == 'POST':
             data = json.loads(str(request.data)[2:-1])
+            print(data)
             self.pinOut.status = data['status']
             self.weapon = data['weapon'] if 'weapon' in data else None
+            if self.pinOut.status == 'sent':
+                self.client.new_alert_notification(f"{self.weapon.title()} detected at {self.client.node_config['location']} in node {self.client.node_config['node_id']}")
             return jsonify({'status': 200, 'message': 'Status changed to {}'.format(self.pinOut.status)})
         if request.method == 'GET':
             return jsonify({'status': 200, 'message': self.pinOut.status})

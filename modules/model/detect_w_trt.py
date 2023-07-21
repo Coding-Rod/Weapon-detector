@@ -15,7 +15,6 @@ class Detect:
     momentum_thresholds = [x*1.75 for x in confidence_thresholds]
     queues = [deque(maxlen=6) for _ in range(len(momentum_thresholds))]
     constant = 0.5
-    last_classname = None
         
     def filter_gigant_bounding_boxes(self, bounding_boxes: list, threshold: float = 0.7, image_shape: tuple = (640, 640, 3)) -> list:
         """ This function is used to filter bounding boxes that are too big
@@ -48,7 +47,7 @@ class Detect:
         except (ValueError, KeyError):
             return bounding_boxes
     
-    def momentum(self, class_name: int, confidence: float, threshold: float, queue: deque, constant: float = 0.9, verbose: bool = False) -> tuple:
+    def momentum(self, class_name: int, confidence: float, threshold: float, queue: deque, constant: float = 0.5) -> tuple:
         """ Momentum is a measure of how many frames in a row a given class has been, it considers a queue of the last 10 frames and returns the most frequent class in the queue, consudering a pondered sum of the last 10 frames. Each frame has a weight of a constant value between 0 and 1, where the first frame has the lowest weight confidense multiplied by the constant power to n, where n is the frame index, and the last frame has the highest weight confidense multiplied by the constant power to 0.
 
         Args:
@@ -58,17 +57,15 @@ class Detect:
         Returns:
             int: Class name, could be 0 or 1, where 0 is no class and 1 is class.
         """
-        momentum = 0
+        calc_momentum = 0
         queue.append((class_name, confidence))
-        
-        for i,j in enumerate(queue):
-            momentum += j[0] * (j[1] * constant ** i)
+        for i in range(len(queue)-1, -1, -1):
+            calc_momentum += queue[i][0] * (queue[i][1] * constant ** i)
 
-        if verbose:
-            print("Queue: ", queue, end=" ")
-            print("Momentum: ", momentum, end=" ")
+        print("Class: ", class_name, end=' ')
+        print("Momentum: ", calc_momentum)
 
-        return momentum >= threshold, queue
+        return calc_momentum >= threshold, queue
     
     def convert_to_roboflow_format(self, bounding_boxes: list) -> list:
         """ This function is used to convert bounding boxes to roboflow format
@@ -103,19 +100,15 @@ class Detect:
             })
         return result
     
-    def detection(self, frame: np.ndarray, show: bool=False) -> tuple:
+    def detection(self, frame: np.ndarray) -> tuple:
         """ This function is used to detect weapons in a frame
 
         Args:
             frame (np.ndarray): The frame to be processed
-            show (bool, optional): Show the frame with bounding boxes. Defaults to False.
 
         Returns:
             tuple: Return two values: A boolean value that determines if detection is correct and a list of bounding boxes detected in the last frame
         """
-        if show:
-            cv2.imshow("Frame", frame)
-            cv2.waitKey(1)
 
         detections, t = self.model.Inference(frame) # returns detections and inference time
         
@@ -135,7 +128,7 @@ class Detect:
                 for bounding_box in bounding_boxes:
                     class_name = bounding_box['class']
                     confidence = bounding_box['confidence']
-                    momentum_result, self.queues[i] = self.momentum(1 if class_name else 0, float(confidence), float(threshold), self.queues[i], self.constant, verbose=False)
+                    momentum_result, self.queues[i] = self.momentum(1 if class_name else 0, float(confidence), float(threshold), self.queues[i], self.constant)
                     
                     # print("Class: ", class_name, end=' ')
                     # print("Momentum: ", momentum_result)
@@ -149,11 +142,6 @@ class Detect:
                     return False, bounding_boxes
             
             
-        except IndexError:
+        except IndexError as e:
+            print(e)
             return False, []
-        finally:
-            # if predictions:
-            #     print("Response: ", response)
-            #     print("Bounding boxes: ", bounding_boxes)
-            if show:
-                cv2.destroyAllWindows()
