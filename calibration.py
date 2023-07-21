@@ -3,6 +3,7 @@ import numpy as np
 import yaml
 from modules.camera.preprocessing.edge_preprocessing import EdgePreprocessor
 from modules.camera.preprocessing.image_preprocessing import ImagePreprocessor
+from modules.model.detect_w_trt import Detect
 
 with open("config/config.yml", 'r') as ymlfile:
     cfg = yaml.safe_load(ymlfile)
@@ -11,23 +12,13 @@ with open("config/config.yml", 'r') as ymlfile:
 if __name__ == '__main__':
     imagePreprocessor = ImagePreprocessor(image)
     edgePreprocessor = EdgePreprocessor(edge)
+    detection = Detect()
     
     cv2.namedWindow("Calibration")
 
     # Create trackbars for every attribute
     cv2.createTrackbar("Desired Width", "Calibration", imagePreprocessor.desired_width, 1000, imagePreprocessor.set_desired_width)
     cv2.createTrackbar("Desired Height", "Calibration", imagePreprocessor.desired_height, 1000, imagePreprocessor.set_desired_height)
-    # cv2.createTrackbar("Clip Limit", "Calibration", int(edgePreprocessor.clip_limit * 100), 1000, edgePreprocessor.set_clip_limit)
-    # cv2.createTrackbar("Tile Grid Size Width", "Calibration", edgePreprocessor.tile_grid_size[0], 128, edgePreprocessor.set_tile_grid_size_width)
-    # cv2.createTrackbar("Tile Grid Size Height", "Calibration", edgePreprocessor.tile_grid_size[1], 128, edgePreprocessor.set_tile_grid_size_height)
-    # cv2.createTrackbar("Canny Threshold 1", "Calibration", edgePreprocessor.canny_threshold1, 255, edgePreprocessor.set_canny_threshold1)
-    # cv2.createTrackbar("Canny Threshold 2", "Calibration", edgePreprocessor.canny_threshold2, 255, edgePreprocessor.set_canny_threshold2)
-    # cv2.createTrackbar("Color Red Channel", "Calibration", edgePreprocessor.color[0], 255, edgePreprocessor.set_red_color)
-    # cv2.createTrackbar("Color Green Channel", "Calibration", edgePreprocessor.color[1], 255, edgePreprocessor.set_green_color)
-    # cv2.createTrackbar("Color Blue Channel", "Calibration", edgePreprocessor.color[2], 255, edgePreprocessor.set_blue_color)
-    # cv2.createTrackbar("Lines Threshold", "Calibration", edgePreprocessor.lines_threshold, 255, edgePreprocessor.set_lines_threshold)
-    # cv2.createTrackbar("Lines Min Line Length", "Calibration", edgePreprocessor.lines_min_line_length, 255, edgePreprocessor.set_lines_min_line_length)
-    # cv2.createTrackbar("Lines Max Line Gap", "Calibration", edgePreprocessor.lines_max_line_gap, 255, edgePreprocessor.set_lines_max_line_gap)
     cv2.createTrackbar("Alpha", "Calibration", int(imagePreprocessor.alpha * 100), 255, imagePreprocessor.set_alpha)
     cv2.createTrackbar("Beta", "Calibration", int(imagePreprocessor.beta), 127, imagePreprocessor.set_beta)
     
@@ -52,20 +43,28 @@ if __name__ == '__main__':
         
         cv2.imshow('Preprocessed', image)
 
-        # result = edgePreprocessor.pipeline(image,
-        #     edgePreprocessor.convert_to_grayscale,
-        #     edgePreprocessor.apply_clahe,
-        #     # preprocessor.perform_histogram_equalization,
-        #     edgePreprocessor.detect_edges,
-        #     edgePreprocessor.detect_lines, # Filtro pasobajas
-        #     edgePreprocessor.dilate_image,
-        #     edgePreprocessor.invert_image,
-        # )
-        # Inverted edges
-        # cv2.imshow('Edges', cv2.bitwise_not(edgePreprocessor.get_edges()))
+        detected, results = detection.detection(image)
+        print("Results: ", results)
+        if detected:
+            print("-"*10, results, "-"*10)
         
-        # result = preprocessor.get_preprocessed_image_with_original(frame)
-        # cv2.imshow('Result', result)
+        if results:
+            try:
+                # print(results)
+                start_point = int(results[0]['x'] - results[0]['width']//2), int(results[0]['y'] - results[0]['height']//2)
+                end_point = int(results[0]['x'] + results[0]['width']//2), int(results[0]['y'] + results[0]['height']//2)
+                cv2.rectangle(image, 
+                    start_point,
+                    end_point,
+                    (0, 255, 0),
+                    2)
+                cv2.putText(image, f"{results[0]['class']}: {results[0]['confidence']}", (start_point[0], start_point[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
+            except (IndexError, KeyError) as e:
+                print(e)
+        
+        # Show the frame
+        cv2.imshow('Output', image)
+        
         c = cv2.waitKey(1)
         if c == 27: # ESC
             break

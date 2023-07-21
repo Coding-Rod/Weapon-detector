@@ -15,6 +15,14 @@ class ImagePreprocessor(Parameters):
     def change_contrast_and_brightness(self, image):
         return cv2.convertScaleAbs(image, alpha=self.alpha, beta=self.beta)
     
+    def apply_rgb_clahe(self, image):
+        b, g, r = cv2.split(image)
+        clahe = cv2.createCLAHE(clipLimit=self.clip_limit, tileGridSize=(self.tile_grid_size, self.tile_grid_size))
+        b = clahe.apply(b)
+        g = clahe.apply(g)
+        r = clahe.apply(r)
+        return cv2.merge((b, g, r))
+    
     def pipeline(self, img, *args):
         self.image = img
 

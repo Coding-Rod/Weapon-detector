@@ -6,7 +6,8 @@ import json
 import cv2
 
 class Detect:
-    curl_command = 'curl --silent -d "@-" "http://localhost:9001/weapons-28-jun/4?api_key=7rRyq2IXnl3yEIKk7GCw"'
+    # curl_command = 'curl --silent -d "@-" "http://localhost:9001/weapons-28-jun/4?api_key=7rRyq2IXnl3yEIKk7GCw"'
+    curl_command = 'curl --silent -d "@-" "http://localhost:9001"'
     momentum_thresholds = 0.85, 0.7
     confidence_thresholds = 0.6, 0.4
     queues = [deque(maxlen=8), deque(maxlen=8)]

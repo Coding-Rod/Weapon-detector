@@ -13,14 +13,14 @@ from modules.camera.camera import Camera
 from modules.security.security import Security
 
 class App(Camera):
-    def __init__(self, client: ApiClient, hardware: dict, camera: int = 0, image_preprocessing_params: dict = None, edge_preprocessing_params: dict = None):
+    def __init__(self, client: ApiClient, hardware: dict, camera: int = 0, image_preprocessing_params: dict = None):
         self.client = client
         self.pinOut = PinOut(**hardware)
         self.security = Security()
 
         # Set RGB led to Green
         self.pinOut.write_rgb(False, True, False)
-        super().__init__(camera, image_preprocessing_params, edge_preprocessing_params)
+        super().__init__(camera, image_preprocessing_params)
         self.app = Flask(__name__, template_folder='./templates')
         self.routes()
            
@@ -87,26 +87,30 @@ async def main():
         print("Welcome to the crime detection system controller")
         print("Please your username and password to start the system")
         
+        # TODO: Remove this for production
         # Development
         client = await cli(
             config['base_url'],
             'rod5919',
             'password123'
         )
+        debug = True
         
+        # TODO: Uncomment this for production
         # Production
         # client = await cli(
         #     config['base_url'],
         #     input("Username: "),
         #     getpass("Password: ")
         #     )
+        # debug = False
 
         print("Starting...")
         # Send status to server
-        app = App(client, config['hardware'], config['camera'], config['preprocessing']['image'], config['preprocessing']['edge'])
+        app = App(client, config['hardware'], config['camera'], config['preprocessing'])
         await client.patch({'status': True})        
 
-        app.run(debug=True)
+        app.run(debug=debug)
     except client_exceptions.ClientConnectorError:
         print('Server is not available')
     else:        
@@ -119,8 +123,7 @@ async def main():
         except UnboundLocalError:
             pass
         try:
-            app.pinOut.write_rgb(False, False, False)
-            app.pinOut.write_relay(False)
+            app.pinOut.status = 'off'
             app.pinOut.cleanup()
         except:
             pass
