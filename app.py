@@ -1,10 +1,10 @@
 import asyncio
-import yaml
 import os
+import yaml
 
 from aiohttp import client_exceptions
 from flask import Flask, render_template, request, json, jsonify
-from getpass import getpass
+from flask_socketio import SocketIO
 
 from modules.api.apiClient import ApiClient
 from modules.cli.cli import cli
@@ -20,8 +20,9 @@ class App(Camera):
 
         # Set RGB led to Green
         self.pinOut.write_rgb(False, True, False)
-        super().__init__(camera, image_preprocessing_params)
+        super().__init__()
         self.app = Flask(__name__, template_folder='./templates')
+        self.socketio = SocketIO(self.app)
         self.routes()
            
     def index(self):
@@ -63,20 +64,43 @@ class App(Camera):
         else:
             self.security.changePassword(new_password)
             return jsonify({'status': 200, 'message': 'Password changed'})
-            
+    
+    def status(self):
+        """
+        This method recieve a get request and return the status of the system
+        or a post request with a status and change the status of the system
+        Responses:
+            - 200: return the status of the system
+        """
+        if request.method == 'POST':
+            data = json.loads(str(request.data)[2:-1])
+            self.pinOut.status = data['status']
+            self.weapon = data['weapon'] if 'weapon' in data else None
+            return jsonify({'status': 200, 'message': 'Status changed to {}'.format(self.pinOut.status)})
+        if request.method == 'GET':
+            return jsonify({'status': 200, 'message': self.pinOut.status})
+                
+    def motion(self):
+        """
+        This method recieve a get request and return the PIR sensor status
+        
+        Responses:
+            - 200: return the PIR sensor status
+        """
+        return jsonify({'status': 200, 'message': self.pinOut.read_pin()})
+    
     def routes(self):
         self.app.add_url_rule('/', 'index', self.index)
-        self.app.add_url_rule('/video_feed', 'video_feed', self.video_feed)
+        self.app.add_url_rule('/video_feed', 'video_feed', self.video_feed, methods=['POST'])
         self.app.add_url_rule('/requests', 'tasks', self.tasks, methods=['POST', 'GET'])
         self.app.add_url_rule('/password', 'password', self.password, methods=['POST'])
         self.app.add_url_rule('/change_password', 'change_password', self.change_password, methods=['POST'])
+        self.app.add_url_rule('/status', 'status', self.status, methods=['GET', 'POST'])
+        self.app.add_url_rule('/motion', 'motion', self.motion, methods=['GET'])
 
     def run(self, debug=False):
-        if debug:
-            self.app.run(debug=debug, threaded=True, use_reloader=False)
-        else:
-            self.app.run()
-         
+        self.socketio.run(self.app, port=5000, debug=debug)
+        
 async def main():
     try:
         config = yaml.safe_load(open("config/config.yml"))
@@ -118,10 +142,6 @@ async def main():
         await client.patch({'status': False})
     finally:
         print("Closing...")
-        try:
-            app.cleanup()
-        except UnboundLocalError:
-            pass
         try:
             app.pinOut.status = 'off'
             app.pinOut.cleanup()

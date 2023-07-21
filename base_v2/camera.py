@@ -13,11 +13,6 @@ while True:
 
     print(response)
 
-    # Every 5 seconds, send a post request to the server
-    # if time.time() - start_time > 5:
-    #     requests.post('http://127.0.0.1:5000/notification', json={'message': 'Hello, world!'})
-    #     start_time = time.time()
-
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 

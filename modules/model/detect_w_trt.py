@@ -11,9 +11,9 @@ from .yoloDet import YoloTRT
 class Detect:
     __actual_path = Path(__file__).parent.absolute()
     model = YoloTRT(library=f"{__actual_path}/yolov5/build/libmyplugins.so", engine=f"{__actual_path}/yolov5/build/yolov5.engine", conf=0.3, yolo_ver="v5")
-    momentum_thresholds = 0.85, 0.7
     confidence_thresholds = 0.6, 0.4
-    queues = [deque(maxlen=8), deque(maxlen=8)]
+    momentum_thresholds = [x*1.75 for x in confidence_thresholds]
+    queues = [deque(maxlen=6) for _ in range(len(momentum_thresholds))]
     constant = 0.5
     last_classname = None
         

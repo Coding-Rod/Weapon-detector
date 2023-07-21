@@ -30,36 +30,11 @@ class PinOut:
         GPIO.setup(self.input_pin, GPIO.IN) # PIR sensor
         [GPIO.setup(pin, GPIO.OUT) for pin in [*self.led_pins, self.relay_pin]]
         
+        # Check if mock
+        self.mock = GPIO.IN == 'IN'
+        
         self.status = 'starting'
         self.write_relay(False)
-
-    def state_machine(self) -> bool:
-        """ The state machine for the pin.
-        
-        Returns:
-            bool: If system should be in weapon detection mode.
-        """
-        # print('Status: ', self.status, ' Time: ', time.time() - self.start_time)
-        if self.status == 'standby' and self.read_pin():
-            self.status = 'running' # Set status to running
-            return True # Return start time and True
-        
-        if self.status == 'starting' or self.status == 'learning':
-            return False # Return False
-        
-        elif self.status == 'running' and (time.time() - self.start_time) > 12:
-            self.status = 'standby' # Set status to standby
-            return False # Return False
-        
-        elif self.status == 'sent' and time.time() - self.start_time > 15:
-            self.status = 'alarm' # Set status to alarm
-            return False # Return False
-        
-        elif (self.status == 'alarm' and time.time() - self.start_time > 60) or self.status == 'password':
-            self.status = 'standby' # Set status to standby
-            return False
-        else:
-            return True # Return True
     
     @property
     def status(self) -> str:
@@ -84,6 +59,9 @@ class PinOut:
             self.write_relay(True)
         else:
             self.write_relay(False)
+            
+        if self.status == 'sent':
+            self.client.new_alert_notification(f"{self.weapon.title()} detected at {self.client.node_config['location']} in node {self.client.node_config['node_id']}")
         print('Status set to: ', self.status)
 
     def get_status(self) -> str:
@@ -100,7 +78,8 @@ class PinOut:
         Returns:
             bool: The value of the pin.
         """        
-        
+        if self.mock:
+            return self.status != 'learning'
         return GPIO.input(self.input_pin)
         
     def write_rgb(self, red: bool, green: bool, blue: bool): 

@@ -7,7 +7,7 @@ class ImagePreprocessor(Parameters):
         super().__init__(image_params=params)
     
     def resize_image(self, image):
-        return cv2.resize(image, (self.desired_width, self.desired_height))
+        return cv2.resize(image, (self.desired_width, self.desired_height), interpolation=cv2.INTER_AREA)
     
     def flip_image(self, image):
         return cv2.flip(image, 0)

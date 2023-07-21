@@ -6,8 +6,8 @@ import json
 import cv2
 
 class Detect:
-    # curl_command = 'curl --silent -d "@-" "http://localhost:9001/weapons-28-jun/4?api_key=7rRyq2IXnl3yEIKk7GCw"'
-    curl_command = 'curl --silent -d "@-" "http://localhost:9001"'
+    curl_command = 'curl --silent -d "@-" "http://localhost:9001/weapons-28-jun/4?api_key=7rRyq2IXnl3yEIKk7GCw"'
+    # curl_command = 'curl --silent -d "@-" "http://localhost:9001"'
     momentum_thresholds = 0.85, 0.7
     confidence_thresholds = 0.6, 0.4
     queues = [deque(maxlen=8), deque(maxlen=8)]
@@ -44,7 +44,7 @@ class Detect:
         except (ValueError, KeyError):
             return bounding_boxes
     
-    def momentum(self, class_name: int, confidence: float, threshold: float, queue: deque, constant: float = 0.9, verbose: bool = False) -> tuple:
+    def momentum(self, class_name: int, confidence: float, threshold: float, queue: deque, constant: float = 0.9) -> tuple:
         """ Momentum is a measure of how many frames in a row a given class has been, it considers a queue of the last 10 frames and returns the most frequent class in the queue, consudering a pondered sum of the last 10 frames. Each frame has a weight of a constant value between 0 and 1, where the first frame has the lowest weight confidense multiplied by the constant power to n, where n is the frame index, and the last frame has the highest weight confidense multiplied by the constant power to 0.
 
         Args:
@@ -54,33 +54,23 @@ class Detect:
         Returns:
             int: Class name, could be 0 or 1, where 0 is no class and 1 is class.
         """
-        momentum = 0
+        calc_momentum = 0
         queue.append((class_name, confidence))
         
-        for i,j in enumerate(queue):
-            momentum += j[0] * (j[1] * constant ** i)
+        for i in range(len(queue), 0, -1):
+            calc_momentum += queue[i][0] * (queue[i][1] * constant ** i)
 
-        if verbose:
-            print("Queue: ", queue, end=" ")
-            print("Momentum: ", momentum, end=" ")
-
-        return momentum >= threshold, queue
+        return calc_momentum >= threshold, queue
     
-    def detection(self, frame: np.ndarray, show: bool=False) -> tuple:
+    def detection(self, frame: np.ndarray) -> tuple:
         """ This function is used to detect weapons in a frame
 
         Args:
             frame (np.ndarray): The frame to be processed
-            show (bool, optional): Show the frame with bounding boxes. Defaults to False.
 
         Returns:
             tuple: Return two values: A boolean value that determines if detection is correct and a list of bounding boxes detected in the last frame
         """
-        predictions = None
-
-        if show:
-            cv2.imshow("Frame", frame)
-            cv2.waitKey(1)
 
         # Convert the frame to base64
         _, img_encoded = cv2.imencode(".jpg", frame)
@@ -92,7 +82,7 @@ class Detect:
 
         # Decode the response
         response = stdout.decode('utf-8')
-
+        
         try:        
             # Getting predictions
             bounding_boxes_text = response.split('predictions": ')[1].split('],')[0] + ']'
@@ -113,7 +103,7 @@ class Detect:
                 for bounding_box in bounding_boxes:
                     class_name = bounding_box['class']
                     confidence = bounding_box['confidence']
-                    momentum_result, self.queues[i] = self.momentum(1 if class_name else 0, float(confidence), float(threshold), self.queues[i], self.constant, verbose=False)
+                    momentum_result, self.queues[i] = self.momentum(1 if class_name else 0, float(confidence), float(threshold), self.queues[i], self.constant)
                     
                     # print("Class: ", class_name, end=' ')
                     # print("Momentum: ", momentum_result)
@@ -129,9 +119,3 @@ class Detect:
             
         except IndexError:
             return False, []
-        finally:
-            # if predictions:
-            #     print("Response: ", response)
-            #     print("Bounding boxes: ", bounding_boxes)
-            if show:
-                cv2.destroyAllWindows()

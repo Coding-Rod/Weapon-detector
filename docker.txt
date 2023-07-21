@@ -1,5 +1,5 @@
-sudo docker run --net=host --gpus all roboflow/inference-server:gpu
-sudo docker run --net=host --gpus all roboflow/inference-server:cpu
+sudo docker run --net=host roboflow/inference-server:gpu
+sudo docker run --net=host roboflow/inference-server:cpu
 
 if ! [ -x "$(command -v curl)" ]; then
   sudo apt-get install curl
