@@ -1,2 +1,2 @@
 python3 app.py &
-python3 server.py &
+python3 inference.py

@@ -1,0 +1,23 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Image Stream</title>
+</head>
+<body>
+    <div id="image-container">
+        <img id="image" src="" alt="Image Stream">
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.2/socket.io.js"></script>
+    <script type="text/javascript">
+        const socket = io.connect('http://' + document.domain + ':' + location.port);
+
+        socket.on('new_image', function(data) {
+            document.getElementById('image').src = 'data:image/jpeg;base64,' + data.image;
+            console.log('Image received');
+        });
+    </script>
+</body>
+</html>
