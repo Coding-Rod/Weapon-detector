@@ -5,6 +5,7 @@ import yaml
 from aiohttp import client_exceptions
 from flask import Flask, render_template, request, json, jsonify
 from flask_socketio import SocketIO
+from getpass import getpass
 
 from modules.api.apiClient import ApiClient
 from modules.cli.cli import cli
@@ -114,23 +115,13 @@ async def main():
         print("Welcome to the crime detection system controller")
         print("Please your username and password to start the system")
         
-        # TODO: Remove this for production
-        # Development
+        # Production
         client = await cli(
             config['base_url'],
-            'rod5919',
-            'password123'
-        )
-        debug = True
-        
-        # TODO: Uncomment this for production
-        # Production
-        # client = await cli(
-        #     config['base_url'],
-        #     input("Username: "),
-        #     getpass("Password: ")
-        #     )
-        # debug = False
+            input("Username: "),
+            getpass("Password: ")
+            )
+        debug = False
 
         print("Starting...")
         # Send status to server

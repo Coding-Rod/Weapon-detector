@@ -85,7 +85,7 @@ class ImageHandler:
     def preprocess(self, image):
         try:
             return self.imagePreprocessor.pipeline(image,
-                # self.imagePreprocessor.resize_image,
+                self.imagePreprocessor.resize_image,
                 self.imagePreprocessor.flip_image,
                 self.imagePreprocessor.change_contrast_and_brightness,
             )
