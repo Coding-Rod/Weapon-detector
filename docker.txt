@@ -1,9 +1,29 @@
+# If you don't have docker installed, install it using the following command
+sudo apt-get install docker.io
+
+# Choose GPU version if you have an NVIDIA GPU else choose CPU version
 sudo docker run --net=host roboflow/inference-server:gpu
 sudo docker run --net=host roboflow/inference-server:cpu
 
-if ! [ -x "$(command -v curl)" ]; then
-  sudo apt-get install curl
-fi
+# If tou don't have curl installed, install it using the following command
+sudo apt-get install curl
 
+# You can use one of the following commands to activate the API
 base64 images/sample.jpg | curl -d @- \
 "http://localhost:9001/weapons-28-jun/4?api_key=7rRyq2IXnl3yEIKk7GCw"
+
+base64 images/sample.jpg | curl -d @- \
+"http://localhost:9001/knives-n-guns-backup/1?api_key=uWT4WzrPNeKaypAQ3Ah7"
+
+base64 images/sample.jpg | curl -d @- \
+"http://localhost:9001/gun-knife-thesis/3?api_key=wSbYaczzLzELee2lx4ed"
+
+base64 images/sample.jpg | curl -d @- \
+"http://localhost:9001/thesis-gun-knife/9?api_key=DmyTMwALZb1Ah6cKptuz"
+
+# After activating the server change the file: ./src/modules/model/detect.py
+# and change the following line
+# curl_command = 'curl --silent -d "@-" "http://localhost:9001/weapons-28-jun/4?api_key=7rRyq2IXnl3yEIKk7GCw"'
+# to
+# curl_command = 'curl --silent -d "@-" "<<YOUR API URL>>"'
+```
