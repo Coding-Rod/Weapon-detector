@@ -1,6 +1,6 @@
 background_threshold: 20
 base_url: https://monkfish-app-pb6xv.ondigitalocean.app/api/v1
-camera: 2
+camera: 0
 hardware:
   input_pin: 18
   led_pins:

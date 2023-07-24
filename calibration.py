@@ -102,6 +102,7 @@ if __name__ == '__main__':
     cv2.destroyAllWindows()
     
     cfg['preprocessing'] = imagePreprocessor.get_params()
+    cfg['background_threshold'] = background_remover.threshold
     
     # Save changes into existing configuration file .yaml
     with open('config/config.yml', 'w') as f:
