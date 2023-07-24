@@ -15,7 +15,8 @@ time.sleep(5)
 
 with open('config/config.yml') as f:
     config = yaml.safe_load(f)
-CAMERA = config['camera']
+    CAMERA = config['camera']
+    background_threshold = config['background_threshold']
 weapon = None
 last_weapon = None
 global_time = time.time()
@@ -84,7 +85,7 @@ class StreamHandler:
 class ImageHandler:
     config = yaml.safe_load(open("config/config.yml"))
     imagePreprocessor = ImagePreprocessor(config['preprocessing'])
-    backgroundRemover = BackgroundRemover()    
+    backgroundRemover = BackgroundRemover(threshold=background_threshold)   
     
     def preprocess(self, image):
         try:

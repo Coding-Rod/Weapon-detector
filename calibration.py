@@ -14,10 +14,11 @@ with open("config/config.yml", 'r') as ymlfile:
     cfg = yaml.safe_load(ymlfile)
     image = cfg['preprocessing']
     CAMERA = cfg['camera']
+    background_threshold = cfg['background_threshold']
 
 if __name__ == '__main__':
     imagePreprocessor = ImagePreprocessor(image)
-    background_remover = BackgroundRemover()
+    background_remover = BackgroundRemover(threshold=background_threshold)
     detection = Detect()
     
     cv2.namedWindow("Calibration")
@@ -27,6 +28,7 @@ if __name__ == '__main__':
     cv2.createTrackbar("Desired Height", "Calibration", imagePreprocessor.desired_height, 1000, imagePreprocessor.set_desired_height)
     cv2.createTrackbar("Alpha", "Calibration", int(imagePreprocessor.alpha * 100), 255, imagePreprocessor.set_alpha)
     cv2.createTrackbar("Beta", "Calibration", int(imagePreprocessor.beta), 127, imagePreprocessor.set_beta)
+    cv2.createTrackbar("Bg Threshold", "Calibration", background_remover.threshold, 50, background_remover.set_threshold)
     
     cv2.imshow("Calibration", np.zeros((1, 500, 3), np.uint8))
     

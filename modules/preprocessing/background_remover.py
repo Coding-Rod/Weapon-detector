@@ -3,12 +3,12 @@ import time
 import numpy as np
 
 class BackgroundRemover:
-    learning_time = 5
-    threshold = 30
-    def __init__(self):
+    def __init__(self, threshold=30, learning_time=5):
         self.start_time = time.time()
         self.static_background = None
         self.process_background = None
+        self.threshold = threshold
+        self.learning_time = learning_time
 
     def learn_background(self, frame, stop_learning=False):
         if self.static_background is None:
@@ -25,6 +25,9 @@ class BackgroundRemover:
 
     def set_static_background(self):
         self.static_background = self.process_background.copy().astype(float)
+
+    def set_threshold(self, threshold):
+        self.threshold = threshold
 
     def remove_background(self, frame):
         background = self.static_background.astype(dtype=np.uint8)
