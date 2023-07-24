@@ -16,7 +16,6 @@ class Camera:
         os.makedirs('images', exist_ok=True)
         os.makedirs('videos', exist_ok=True)
         
-        
     def video_feed(self):
         """ This method recieve a post request with an image and send it to the client
 

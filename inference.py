@@ -11,7 +11,11 @@ except ModuleNotFoundError:
 from modules.camera.preprocessing.image_preprocessing import ImagePreprocessor
 from modules.camera.preprocessing.background_remover import BackgroundRemover
 
-CAMERA = 2
+time.sleep(5)
+
+with open('config/config.yml') as f:
+    config = yaml.safe_load(f)
+CAMERA = config['camera']
 weapon = None
 last_weapon = None
 global_time = time.time()
@@ -40,7 +44,7 @@ class APIHandler:
     @status.setter
     def status(self, status):
         global weapon, last_weapon, global_time
-        print("Time: ", time.time() - global_time)
+        # print("Time: ", time.time() - global_time)
         data ={
             'status': status,
         }
@@ -157,14 +161,18 @@ class InferenceHandler(APIHandler, StreamHandler, ImageHandler):
     
     def obj_detect(self, image):
         return self.detection.detection(image)
-    
 
 if __name__ == '__main__':
     try:
         inferenceHandler = InferenceHandler()
+        status = inferenceHandler.status
+        # print("Status: ", status)
+        if status not in ['standby', 'learning', 'starting', 'running', 'sent', 'alarm', 'password']:
+            print("Server connection not established")
+            sys.exit(1)
         while True:
             start_time = time.time()
-            print("Status: ", inferenceHandler.status)
+            # print("Status: ", inferenceHandler.status)
             frame = inferenceHandler.get_frame()
             frame = inferenceHandler.preprocess(frame)
             weapon_detection = inferenceHandler.state_machine()
@@ -214,7 +222,7 @@ if __name__ == '__main__':
             if inferenceHandler.status == 'alarm' or inferenceHandler.status == 'sent':
                 inferenceHandler.status = inferenceHandler.get_status()
             
-            print("Inference time: ", time.time() - global_time)
+            # print("Inference time: ", time.time() - global_time)
             # Add fps to right bottom corner
             fps = round(1.0 / (time.time() - start_time),2)
             cv2.putText(frame, f"FPS: {fps}", (frame.shape[1] - 170, frame.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 255), 2)
@@ -224,5 +232,5 @@ if __name__ == '__main__':
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
     except requests.exceptions.ConnectionError:
-        print("Server is not running")
+        print("Server is not running\nPress Ctrl+C to exit")
         sys.exit(1)

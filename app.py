@@ -1,11 +1,11 @@
 import asyncio
 import os
 import yaml
+import sys
 
 from aiohttp import client_exceptions
 from flask import Flask, render_template, request, json, jsonify
 from flask_socketio import SocketIO
-from getpass import getpass
 
 from modules.api.apiClient import ApiClient
 from modules.cli.cli import cli
@@ -109,21 +109,19 @@ async def main():
     try:
         config = yaml.safe_load(open("config/config.yml"))
         
-        # Clear terminal
-        os.system('clear')
-        
-        print("Welcome to the crime detection system controller")
-        print("Please your username and password to start the system")
-        
         # Production
-        client = await cli(
-            config['base_url'],
-            input("Username: "),
-            getpass("Password: ")
-            )
+        try:
+            client = await cli(
+                config['base_url'],
+                sys.argv[1],
+                sys.argv[2]
+                )
+        except IndexError:
+            print("Please provide username and password")
+            sys.exit(1)
         debug = False
 
-        print("Starting...")
+        print("Starting flask server...")
         # Send status to server
         app = App(client, config['hardware'], config['camera'], config['preprocessing'])
         await client.patch({'status': True})        

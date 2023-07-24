@@ -143,5 +143,4 @@ class Detect:
             
             
         except IndexError as e:
-            print(e)
             return False, []

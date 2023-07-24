@@ -3,7 +3,6 @@ import numpy as np
 import yaml
 from modules.camera.preprocessing.image_preprocessing import ImagePreprocessor
 
-CAMERA = 2
 
 try:
     from modules.model.detect_w_trt import Detect
@@ -13,6 +12,7 @@ except ModuleNotFoundError:
 with open("config/config.yml", 'r') as ymlfile:
     cfg = yaml.safe_load(ymlfile)
     image = cfg['preprocessing']
+    CAMERA = cfg['camera']
     
 if __name__ == '__main__':
     imagePreprocessor = ImagePreprocessor(image)

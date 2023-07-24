@@ -1,5 +1,5 @@
 base_url: https://monkfish-app-pb6xv.ondigitalocean.app/api/v1
-camera: 0
+camera: 2
 hardware:
   input_pin: 18
   led_pins:

@@ -60,7 +60,7 @@ class PinOut:
         else:
             self.write_relay(False)
             
-        print('Status set to: ', self.status)
+        # print('Status set to: ', self.status)
 
     def get_status(self) -> str:
         """ Get the status of the pin.
@@ -90,7 +90,7 @@ class PinOut:
         Args:
             value (bool): The value to write to the relay pin.
         """
-        print('Relay value: ', value)
+        # print('Relay value: ', value)
         GPIO.output(self.relay_pin, value)
             
     def set_sent_status(self):

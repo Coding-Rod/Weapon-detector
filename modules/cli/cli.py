@@ -55,6 +55,6 @@ async def cli(base_url: str, username: str, password: str) -> ApiClient:
         except PermissionError as error:
             print(error)
             sys.exit()
-    print('Starting...')
+    print('Node registered on server successfully!')
     return client
      

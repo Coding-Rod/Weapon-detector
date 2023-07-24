@@ -23,4 +23,4 @@ class Auth:
                     return self.token
         except KeyError:
             print('Username or password incorrect')
-            sys.exit()
+            sys.exit(1)
