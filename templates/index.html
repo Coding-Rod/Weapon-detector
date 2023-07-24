@@ -24,11 +24,7 @@
   <body style="background-color: #e9ecef;">
     <nav class="navbar bg-dark mb-4">
       <div class="container-fluid">
-        <a class="navbar-brand text-white">Security System</a>
-        <form class="d-flex" method="post" action="{{ url_for('tasks') }}">
-          <input class="me-1 btn btn-link text-white" style="text-decoration: none;" type="submit" value="Capture" name="click" />
-          <input class="me-1 btn btn-link text-white" style="text-decoration: none;" type="submit" value="Start/Stop Recording" name="rec" />
-        </form>
+        <a class="navbar-brand text-white">Weapon detection System</a>
       </div>
     </nav>
     <main class="mt-4">
@@ -195,12 +191,10 @@
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.2/socket.io.js"></script>
     <script type="text/javascript">
-        const socket = io.connect('http://' + document.domain + ':' + location.port);
-
-        socket.on('new_image', function(data) {
-            document.getElementById('image').src = 'data:image/jpeg;base64,' + data.image;
-            console.log('Image received');
-        });
+      const socket = io.connect('http://' + document.domain + ':' + location.port);
+      socket.on('new_image', function(data) {
+          document.getElementById('image').src = 'data:image/jpeg;base64,' + data.image;
+      });
     </script>
   </body>
 </html>

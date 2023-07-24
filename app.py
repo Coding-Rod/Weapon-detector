@@ -75,7 +75,6 @@ class App(Camera):
         """
         if request.method == 'POST':
             data = json.loads(str(request.data)[2:-1])
-            print(data)
             self.pinOut.status = data['status']
             self.weapon = data['weapon'] if 'weapon' in data else None
             if self.pinOut.status == 'sent':
@@ -119,7 +118,7 @@ async def main():
         except IndexError:
             print("Please provide username and password")
             sys.exit(1)
-        debug = False
+        debug = True
 
         print("Starting flask server...")
         # Send status to server
