@@ -3,6 +3,8 @@ import cv2
 import time
 import sys
 import yaml
+import datetime
+import os
 
 try:
     from modules.model.detect_w_trt import Detect
@@ -178,6 +180,7 @@ if __name__ == '__main__':
             frame = inferenceHandler.preprocess(frame)
             weapon_detection = inferenceHandler.state_machine()
             frame = inferenceHandler.background_learning(frame)
+            detected = False
             
             if weapon_detection: # If motion is detected
                 try:
@@ -216,6 +219,11 @@ if __name__ == '__main__':
                         last_weapon = results[0]['class']
                     except (IndexError, KeyError) as e:
                         print(e)
+            if detected:
+                now = datetime.datetime.now()
+                p = os.path.sep.join(['images', "img_{}.png".format(str(now).replace(":",''))])
+                cv2.imwrite(p, frame)
+            
             if inferenceHandler.status == 'sent':
                 message = f"Alarm will sound in {15 - int(time.time() - global_time)} seconds"
                 cv2.putText(frame, message, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 255), 2)
