@@ -8,8 +8,8 @@ try:
     from modules.model.detect_w_trt import Detect
 except ModuleNotFoundError:
     from modules.model.detect import Detect
-from modules.camera.preprocessing.image_preprocessing import ImagePreprocessor
-from modules.camera.preprocessing.background_remover import BackgroundRemover
+from modules.preprocessing.image_preprocessing import ImagePreprocessor
+from modules.preprocessing.background_remover import BackgroundRemover
 
 time.sleep(5)
 
