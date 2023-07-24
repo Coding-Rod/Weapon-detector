@@ -1,8 +1,9 @@
 import cv2
 import numpy as np
 import yaml
-from modules.camera.preprocessing.image_preprocessing import ImagePreprocessor
-
+import time
+from modules.preprocessing.image_preprocessing import ImagePreprocessor
+from modules.preprocessing.background_remover import BackgroundRemover
 
 try:
     from modules.model.detect_w_trt import Detect
@@ -13,9 +14,10 @@ with open("config/config.yml", 'r') as ymlfile:
     cfg = yaml.safe_load(ymlfile)
     image = cfg['preprocessing']
     CAMERA = cfg['camera']
-    
+
 if __name__ == '__main__':
     imagePreprocessor = ImagePreprocessor(image)
+    background_remover = BackgroundRemover()
     detection = Detect()
     
     cv2.namedWindow("Calibration")
@@ -27,6 +29,11 @@ if __name__ == '__main__':
     cv2.createTrackbar("Beta", "Calibration", int(imagePreprocessor.beta), 127, imagePreprocessor.set_beta)
     
     cv2.imshow("Calibration", np.zeros((1, 500, 3), np.uint8))
+    
+    # Ask user to remove background or not
+    bg = input("Remove background? (y/N): ")
+    status = 'learning'
+    start_bg_time = time.time()
     
     cap = cv2.VideoCapture(CAMERA)
 
@@ -46,9 +53,25 @@ if __name__ == '__main__':
         )
         
         cv2.imshow('Preprocessed', image)
+        
+        if bg.lower() == 'y':
+            if status == 'learning' and (time.time() - start_bg_time) > background_remover.learning_time:
+                print("Background learned in ", time.time() - start_bg_time, " seconds")
+                status = 'standby'
+                background_remover.set_static_background()
+                
+            elif status == 'learning':
+                background_remover.learn_background(image)
+                message = "Please be out of the image for " + str(int(background_remover.learning_time - (time.time() - start_bg_time))) + "s"
+                image = cv2.putText(image, message, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 1, cv2.LINE_AA)
+                continue
+            
+            if status == 'standby':
+                image = background_remover.remove_background(image)
+                print("Background removed")
 
         detected, results = detection.detection(image)
-        print("Results: ", results)
+        # print("Results: ", results)
         if detected:
             print("-"*10, results, "-"*10)
         

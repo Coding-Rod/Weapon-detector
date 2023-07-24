@@ -10,5 +10,5 @@ hardware:
 preprocessing:
   alpha: 1.04
   beta: 25
-  height: 640
+  height: 480
   width: 640
