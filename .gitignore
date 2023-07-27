@@ -1,4 +1,3 @@
 */**/__pycache__
 # images/*.png
-modules/api/config.yml
-Dockerfile
+./modules/api/config.yml
