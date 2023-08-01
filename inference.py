@@ -70,7 +70,11 @@ class APIHandler:
         return response.json()['message']
     
 class StreamHandler:
-    video_capture = cv2.VideoCapture(CAMERA)
+    if CAMERA == 'CSI':
+        from utils.csi import gstreamer_pipeline
+        video_capture = cv2.VideoCapture(gstreamer_pipeline(flip_method=0), cv2.CAP_GSTREAMER)
+    else:
+        video_capture = cv2.VideoCapture(CAMERA)
         
     def convert_to_bytes(self, frame):
         _, image_data = cv2.imencode('.jpg', frame)

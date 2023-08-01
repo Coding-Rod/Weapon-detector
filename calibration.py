@@ -2,8 +2,9 @@ import cv2
 import numpy as np
 import yaml
 import time
-from modules.preprocessing.image_preprocessing import ImagePreprocessor
-from modules.preprocessing.background_remover import BackgroundRemover
+from .modules.preprocessing.image_preprocessing import ImagePreprocessor
+# from ..modules.preprocessing.image_preprocessing import ImagePreprocessor
+from .modules.preprocessing.background_remover import BackgroundRemover
 
 try:
     from modules.model.detect_w_trt import Detect
