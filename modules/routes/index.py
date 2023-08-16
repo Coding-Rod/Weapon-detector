@@ -55,7 +55,16 @@ class Routes:
             self.pinOut.status = data['status']
             self.weapon = data['weapon'] if 'weapon' in data else None
             if self.pinOut.status == 'sent':
-                self.client.new_alert_notification(f"{self.weapon.title()} detected at {self.client.node_config['location']} in node {self.client.node_config['node_id']}")
+                message = ' '.join([
+                    self.weapon.title(),
+                    'detected at',
+                    self.client.node_config['name'],
+                    '-',
+                    self.client.node_config['location'],
+                    'by node',
+                    str(self.client.node_config['node_id'])
+                ])
+                self.client.new_alert_notification(message)
             return jsonify({'status': 200, 'message': 'Status changed to {}'.format(self.pinOut.status)})
         if request.method == 'GET':
             return jsonify({'status': 200, 'message': self.pinOut.status})
