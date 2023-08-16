@@ -2,9 +2,9 @@ import cv2
 import numpy as np
 import yaml
 import time
-from .modules.preprocessing.image_preprocessing import ImagePreprocessor
-# from ..modules.preprocessing.image_preprocessing import ImagePreprocessor
-from .modules.preprocessing.background_remover import BackgroundRemover
+from modules.preprocessing.background_remover import BackgroundRemover
+from modules.preprocessing.image_preprocessing import ImagePreprocessor
+# from modules.preprocessing.image_preprocessing import ImagePreprocessor
 
 try:
     from modules.model.detect_w_trt import Detect
@@ -15,6 +15,7 @@ with open("config/config.yml", 'r') as ymlfile:
     cfg = yaml.safe_load(ymlfile)
     image = cfg['preprocessing']
     CAMERA = cfg['camera']
+    print("Camera:", CAMERA)
     background_threshold = cfg['background_threshold']
 
 if __name__ == '__main__':
@@ -37,8 +38,11 @@ if __name__ == '__main__':
     bg = input("Remove background? (y/N): ")
     status = 'learning'
     start_bg_time = time.time()
-    
-    cap = cv2.VideoCapture(CAMERA)
+    if CAMERA == 'CSI':
+        from utils.csi import gstreamer_pipeline
+        cap = cv2.VideoCapture(gstreamer_pipeline(flip_method=0), cv2.CAP_GSTREAMER)
+    else:
+        cap = cv2.VideoCapture(CAMERA)
 
     # Check if the webcam is opened correctly
     if not cap.isOpened():
@@ -47,7 +51,11 @@ if __name__ == '__main__':
     while True:
         ret, frame = cap.read()
         
-        cv2.imshow('Input', frame)
+        try:
+            cv2.imshow('Input', frame)
+        except:
+            print(frame)
+            continue
 
         image = imagePreprocessor.pipeline(frame,
             imagePreprocessor.resize_image,
@@ -107,5 +115,5 @@ if __name__ == '__main__':
     
     # Save changes into existing configuration file .yaml
     with open('config/config.yml', 'w') as f:
-        yaml.dump(cfg, f)
+        yaml.dump(cfg, f, default_flow_style=False)
         print("Changes saved into config.yml")

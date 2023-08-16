@@ -1,15 +1,12 @@
 background_threshold: 25
 base_url: https://monkfish-app-pb6xv.ondigitalocean.app/api/v1
-camera: 0
+camera: CSI
 hardware:
   input_pin: 18
-  led_pins:
-  - 21
-  - 20
-  - 16
+  led_pins: [21, 20, 16]
   relay_pin: 25
-preprocessing:
-  alpha: 1.04
-  beta: 25
+preprocessing: 
+  alpha: 1.39
+  beta: 55
   height: 480
   width: 640

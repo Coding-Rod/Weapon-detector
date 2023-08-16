@@ -104,7 +104,7 @@ class ApiClient:
         """
         
         with open(self.filename, 'w') as file:
-            yaml.dump(data, file)
+            yaml.dump(data, file, default_flow_style=False)
         self.node_config = data
             
     def verify_config(self) -> dict:

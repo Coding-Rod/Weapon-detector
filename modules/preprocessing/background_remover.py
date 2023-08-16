@@ -3,7 +3,7 @@ import time
 import numpy as np
 
 class BackgroundRemover:
-    def __init__(self, threshold=30, learning_time=5):
+    def __init__(self, threshold=30, learning_time=10):
         self.start_time = time.time()
         self.static_background = None
         self.process_background = None

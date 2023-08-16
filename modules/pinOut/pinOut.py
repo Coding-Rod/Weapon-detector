@@ -99,3 +99,20 @@ class PinOut:
         self.start_time = time.time()
         self.write_rgb(True, True, False)
         self.write_relay(False)
+
+if __name__ == '__main__':
+    import sys
+    pinout_control = PinOut(input_pin=18, led_pins=(21,20,16), relay_pin=25)
+    counter = 0
+    try:
+        while True:
+            time.sleep(1)
+            print("Counter:", counter)
+            print(pinout_control.read_pin())
+            color = (counter % 3 == 0, (counter+2)% 3 == 0, (counter+1)% 3 == 0)
+            pinout_control.write_rgb(*color)
+            counter +=1
+    except KeyboardInterrupt:
+        print("Exiting...")
+        pinout_control.write_rgb(0,0,0)
+        sys.exit(1)

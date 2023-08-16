@@ -105,6 +105,7 @@ class ImageHandler:
             return image
     
     def background_removal(self, image):
+        print("Removing bg...")
         return self.backgroundRemover.remove_background(image)
     
     def background_learning(self, frame):
@@ -188,7 +189,7 @@ if __name__ == '__main__':
             
             if weapon_detection: # If motion is detected
                 try:
-                    frame_wo_bg = inferenceHandler.backgroundRemover.remove_background(frame)
+                    frame_wo_bg = inferenceHandler.background_removal(frame)
                 except Exception as e:
                     print(e)
                 detected, results = inferenceHandler.obj_detect(frame_wo_bg)
@@ -246,4 +247,7 @@ if __name__ == '__main__':
                 break
     except requests.exceptions.ConnectionError:
         print("Server is not running\nPress Ctrl+C to exit")
+        sys.exit(1)
+    except KeyboardInterrupt:
+        print("Inference finished succesfully!")
         sys.exit(1)
